@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0e0d0b"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Executive Lab">
+<title>Executive Lab</title>
+<style>
+/* Layout: entrada por código → título grande + separadores (Trabalhos | Calendário | Histórico); listas agrupadas iOS; pedido, ficha e ajustes em folhas */
+:root{
+  --bg:#F2F2F7; --card:#FFFFFF; --fill:#E9E9EE; --sep:#E0E0E5; --fg:#1C1C1E; --muted:#8A8A8F;
+  --blue:#007AFF; --green:#28A745; --orange:#E07B00; --red:#E5372C;
+  --red-s:rgba(229,55,44,.12); --orange-s:rgba(224,123,0,.13); --green-s:rgba(40,167,69,.13); --blue-s:rgba(0,122,255,.12); --gray-s:rgba(120,120,128,.12);
+  --av-a:#0A6CD6; --av-f:#A2845E; --glass:rgba(249,249,251,.86);
+  --font:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+  --display:-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#000000; --card:#1C1C1E; --fill:#2C2C2E; --sep:#38383A; --fg:#F2F2F7; --muted:#98989F;
+  --blue:#0A84FF; --green:#30D158; --orange:#FF9F0A; --red:#FF453A;
+  --red-s:rgba(255,69,58,.2); --orange-s:rgba(255,159,10,.2); --green-s:rgba(48,209,88,.18); --blue-s:rgba(10,132,255,.22); --gray-s:rgba(120,120,128,.24);
+  --av-a:#0A84FF; --av-f:#AC8E68; --glass:rgba(28,28,30,.86); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --card:#1C1C1E; --fill:#2C2C2E; --sep:#38383A; --fg:#F2F2F7; --muted:#98989F;
+  --blue:#0A84FF; --green:#30D158; --orange:#FF9F0A; --red:#FF453A;
+  --red-s:rgba(255,69,58,.2); --orange-s:rgba(255,159,10,.2); --green-s:rgba(48,209,88,.18); --blue-s:rgba(10,132,255,.22); --gray-s:rgba(120,120,128,.24);
+  --av-a:#0A84FF; --av-f:#AC8E68; --glass:rgba(28,28,30,.86); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.4 var(--font);margin:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:8px 60px}
+.wrap.wide{max-width:1100px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+svg{flex:none}
+
+/* Cabeçalho */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px}
+.who{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted);min-width:0}
+.who b{color:var(--fg);font-weight:600}
+.iconbtn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--blue)}
+.iconbtn svg{width:22px;height:22px}
+.plus{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center}
+.plus svg{width:18px;height:18px}
+h1{font:700 2.1rem/1.1 var(--display);letter-spacing:-.02em;margin:10px 0 2px}
+.sub{color:var(--muted);margin:0 0 16px}
+
+/* Segmented */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--fill);border-radius:9px;padding:2px}
+.seg button{padding:6px 10px;border-radius:7px;font-size:.88rem;font-weight:500;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg.main{margin-bottom:20px}
+.seg.sm button{padding:4px 8px;font-size:.8rem}
+
+/* Listas */
+.group{margin-bottom:26px}
+.gh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:0 16px 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.list{background:var(--card);border-radius:12px;overflow:hidden}
+.rowi{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 16px;position:relative;min-height:48px}
+.rowi+.rowi::before,.field+.field::before,.field+.rowi::before,.rowi+.field::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:1px solid var(--sep)}
+button.rowi:active{background:var(--fill)}
+.rowi .main{flex:1;min-width:0}
+.rowi .t{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowi .s{font-size:.84rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrapt .t,.wrapt .s{white-space:normal}
+.chev{color:var(--muted);opacity:.6;font-size:1.1rem;flex:none}
+.empty{padding:16px;color:var(--muted);text-align:center}
+.link{color:var(--blue);text-transform:none;letter-spacing:0;font-size:.84rem;font-weight:500}
+.foot{font-size:.78rem;color:var(--muted);padding:6px 16px 0}
+
+/* Estados */
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;font-weight:600;padding:3px 8px 3px 6px;border-radius:999px;white-space:nowrap;background:var(--gray-s);color:var(--muted)}
+.tag svg{width:12px;height:12px}
+.tag-crit{background:var(--red-s);color:var(--red)} .tag-warn{background:var(--orange-s);color:var(--orange)}
+.tag-new{background:var(--blue-s);color:var(--blue)} .tag-ok{background:var(--green-s);color:var(--green)}
+.aic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none}
+.aic svg{width:16px;height:16px}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;flex:none;font-size:.95rem}
+.av.sm{width:22px;height:22px;font-size:.7rem}
+.av-A{background:var(--av-a)} .av-F{background:var(--av-f)}
+.side{display:grid;justify-items:end;gap:5px;flex:none}
+.side .when{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.side .when.hot{color:var(--red);font-weight:600}
+.fase{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--blue)}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border-radius:999px;padding:6px 14px;font-size:.84rem;font-weight:600;flex:none}
+.pill.ghost{background:var(--blue-s);color:var(--blue)}
+.pill.green{background:var(--green)}
+.key{display:flex;flex-wrap:wrap;gap:14px;font-size:.78rem;color:var(--muted);padding:0 16px 16px}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i{width:10px;height:10px;border-radius:50%}
+
+/* Resumo */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:22px}
+.tile{background:var(--card);border-radius:14px;padding:12px 14px;text-align:left;display:grid;gap:8px}
+.tile .top{display:flex;justify-content:space-between;align-items:center}
+.tile .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.tile .ic svg{width:16px;height:16px}
+.tile b{font:700 1.75rem/1 var(--display);font-variant-numeric:tabular-nums}
+.tile span.l{font-size:.8rem;color:var(--muted);font-weight:500}
+.tile[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--blue)}
+.tile.zero b{color:var(--muted)}
+
+/* Calendário */
+.calnav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.calnav h2{font:700 1.3rem var(--display);margin:0;letter-spacing:-.01em}
+.calnav .ctl{display:flex;align-items:center;gap:4px}
+.calnav .ctl button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--blue)}
+.calnav .ctl button svg{width:20px;height:20px}
+.calnav .ctl .today{width:auto;padding:0 12px;border-radius:999px;background:var(--blue-s);font-weight:600;font-size:.84rem}
+.cal{background:var(--card);border-radius:12px;overflow:hidden}
+.cal-h{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));text-align:center;font-size:.7rem;color:var(--muted);text-transform:uppercase;padding:8px 0 4px}
+.cal-g{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+.cd{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px 8px;min-width:0;border-top:1px solid var(--sep)}
+.cd .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:.95rem;font-variant-numeric:tabular-nums}
+.cd .m{font-size:.6rem;color:var(--muted);font-weight:700;text-transform:uppercase;height:.75rem;line-height:.75rem}
+.cd.past .n{color:var(--muted)}
+.cd.today .n{background:var(--blue);color:#fff;font-weight:700}
+.cd.sel .n{box-shadow:0 0 0 2px var(--fg)}
+.cd.sel.today .n{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--blue)}
+.dots{display:flex;gap:3px;height:6px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.dots i.p{background:none;box-shadow:inset 0 0 0 1.5px var(--blue)}
+.dayh{display:flex;justify-content:space-between;padding:10px 16px 2px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.dayh.hoje{color:var(--blue)}
+.crow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:5px 16px;font-size:.86rem;min-width:0}
+.crow:active{background:var(--fill)}
+.crow .h{width:40px;flex:none;color:var(--muted);font-variant-numeric:tabular-nums;font-size:.8rem}
+.crow .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.crow .ds{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 0;font-size:.8rem}
+.crow .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--muted)}
+.crow .fp{font-size:.62rem;font-weight:700;color:var(--blue);flex:none}
+.wk{padding-bottom:8px}
+.imedn{font-size:.78rem;color:var(--muted)}
+.d-new{background:var(--blue)!important} .d-ok{background:var(--green)!important} .d-warn{background:var(--orange)!important} .d-crit{background:var(--red)!important}
+
+/* Histórico */
+.search{display:flex;align-items:center;gap:8px;background:var(--fill);border-radius:10px;padding:8px 10px;margin-bottom:12px}
+.search svg{width:16px;height:16px;color:var(--muted)}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none}
+.hfilters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;align-items:center}
+.hfilters select{background:var(--card);border:0;border-radius:9px;padding:6px 10px;font-size:.84rem}
+.stats{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.84rem;color:var(--muted);margin:-6px 4px 18px}
+.stats b{color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* Barra inferior (telemóvel) */
+.tabbar{display:none}
+.tabbar button{display:grid;justify-items:center;gap:2px;font-size:.66rem;color:var(--muted);font-weight:500;padding:4px 0}
+.tabbar button[aria-pressed="true"]{color:var(--blue)}
+.tabbar svg{width:24px;height:24px}
+.tabbar .pl{width:48px;height:32px;border-radius:16px;background:var(--blue);color:#fff;display:grid;place-items:center}
+.tabbar .pl svg{width:20px;height:20px}
+@media (max-width:699px){
+  .seg.main,.plus{display:none}
+  .tabbar{display:grid;position:fixed;left:0;right:0;bottom:0;z-index:30;grid-auto-flow:column;grid-auto-columns:1fr;align-items:end;background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--sep);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+  .wrap{padding-bottom:110px}
+  .tile{padding:10px 12px} .tile b{font-size:1.5rem}
+}
+
+/* Entrada */
+.login{position:relative;overflow:hidden;min-height:100vh;min-height:100dvh;padding:40px 16px;display:grid;place-items:center;color:#F3EDE2;background:radial-gradient(90% 55% at 50% 0%,#3b3121 0%,#1b1813 48%,#0e0d0b 100%)}
+.login .lbg{position:absolute;right:-22vmax;bottom:-16vmax;width:78vmax;opacity:.07;pointer-events:none;transform:rotate(-9deg)}
+.login .lbox{position:relative;animation:up .5s ease both}
+.login .lx{display:block;width:62px;margin:0 auto 16px;filter:drop-shadow(0 8px 22px rgba(196,162,90,.35))}
+.login h1{font:400 2.15rem/1.1 Didot,"Bodoni 72","Bodoni MT","Playfair Display",Georgia,serif;letter-spacing:.01em;color:#F6F0E4}
+.login .lsub{margin:9px 0 0;font:600 .66rem var(--font);letter-spacing:.34em;text-transform:uppercase;color:#C4A25A}
+.login .lask{margin:6px 0 0;color:rgba(243,237,226,.62);font-size:.9rem}
+.login .pin i{box-shadow:inset 0 0 0 1.5px #C4A25A}.login .pin i.on{background:#C4A25A}
+.login .pad button{background:rgba(255,255,255,.055);color:#F6F0E4;border:1px solid rgba(196,162,90,.22);touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .08s}
+.login .pad button:active{background:rgba(196,162,90,.3)}
+.login .pad .blank{border:0}.login .hint{color:rgba(243,237,226,.45)}.login .err{color:#FF9B8A}
+.lbox{width:min(360px,100%);text-align:center;display:grid;gap:18px}
+.lbox h1{margin:0}
+.pin{display:flex;justify-content:center;gap:14px}
+.pin i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--fg)}
+.pin i.on{background:var(--fg)}
+.pad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;justify-content:center}
+.pad button{width:72px;height:72px;border-radius:50%;background:var(--card);font:500 1.6rem var(--display)}
+.pad button:active{background:var(--fill)}
+.pad .blank{background:none}
+.hint{font-size:.78rem;color:var(--muted);line-height:1.6}
+.err{color:var(--red);font-size:.86rem;min-height:1.2em}
+
+/* Folhas */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:40}
+.sheet.noanim{animation:none!important}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(640px,100%);max-height:94%;background:var(--bg);z-index:41;border-radius:14px 14px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:700px){.sheet{top:50%;bottom:auto;transform:translate(-50%,-50%);border-radius:14px;max-height:90%}}
+.sh-h{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 16px 10px;gap:8px}
+.sh-h .l{justify-self:start;color:var(--blue)} .sh-h .r{justify-self:end;color:var(--blue);font-weight:600}
+.sh-h h2{font:600 1rem var(--display);margin:0;text-align:center}
+.sh-b{overflow-y:auto;padding:6px 16px 28px}
+.hero{text-align:center;padding:4px 0 20px}
+.hero h3{font:700 1.4rem/1.2 var(--display);margin:0 0 6px;text-wrap:balance}
+.hero p{margin:0 0 10px;color:var(--muted);display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* Campos */
+.field{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:46px;position:relative}
+.field>label,.field>.lb{flex:none;width:104px}
+.field input,.field select{flex:1;min-width:0;border:0;background:none;text-align:right;padding:12px 0;appearance:none;-webkit-appearance:none}
+.field input:focus,.field select:focus{outline:none}
+.field select{direction:rtl;color:var(--muted)}
+.field.col{flex-direction:column;align-items:stretch;padding:10px 16px;gap:8px}
+.field.col>label,.field.col>.lb{width:auto;font-size:.84rem;color:var(--muted)}
+.field textarea{border:0;background:none;resize:vertical;min-height:64px;padding:2px 0;outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 12px;border-radius:999px;background:var(--fill);font-size:.86rem;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--blue);color:#fff}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tbtn{background:var(--fill);border-radius:10px;padding:10px 12px;text-align:left;font-size:.88rem;font-weight:500;line-height:1.25}
+.tbtn[aria-pressed="true"]{background:var(--blue);color:#fff}
+.tbtn small{display:block;font-weight:400;opacity:.75;font-size:.74rem}
+.tgh{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:10px 0 6px}
+.teeth{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px}
+.teeth button{aspect-ratio:1/1.15;max-width:100%;border-radius:6px;background:var(--fill);font-size:.68rem;font-variant-numeric:tabular-nums;padding:0}
+.teeth button[aria-pressed="true"]{background:var(--blue);color:#fff}
+.teeth .gap{grid-column:span 16;height:6px}
+.teeth button:nth-child(8n){margin-right:0}
+.drow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.drow input{background:var(--fill);border:0;border-radius:8px;padding:8px;text-align:left;min-width:0}
+.drow .x{width:28px;height:28px;border-radius:50%;background:var(--fill);color:var(--muted)}
+.dask{font-size:.8rem;color:var(--orange);font-weight:500}
+.photos{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.photos img{width:64px;height:64px;object-fit:cover;border-radius:10px}
+.photos.big img{width:96px;height:96px;cursor:zoom-in}
+.addph{position:relative;display:inline-flex;align-items:center;gap:8px;color:var(--blue);font-weight:600;background:var(--blue-s);border-radius:10px;padding:10px 14px;cursor:pointer}
+.addph svg{width:20px;height:20px}
+.fotozona{display:grid;justify-items:center;gap:12px;padding:16px}
+.fotozona .addph{font-size:1.02rem;padding:14px 22px;border-radius:14px}
+.fotozona .addph svg{width:24px;height:24px}
+.fotozona .photos{justify-content:center}
+.fotozona .photos img{cursor:zoom-in}
+.semfoto{background:var(--orange-s);border-radius:12px;padding:14px 16px;display:grid;gap:10px;margin-bottom:22px}
+.semfoto b{font-size:.98rem}
+.addph input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.note{font-size:.8rem;padding:6px 16px 0;color:var(--muted)}
+.note.warn{color:var(--orange)} .note.crit,.note.err{color:var(--red)}
+.btns{display:grid;gap:10px;margin-bottom:26px}
+.btn{width:100%;padding:13px;border-radius:12px;background:var(--card);color:var(--blue);font-weight:600;text-align:center}
+.btn.fill{background:var(--blue);color:#fff} .btn.red{color:var(--red)} .btn.green{background:var(--green);color:#fff}
+.check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--muted);flex:none;display:grid;place-items:center;color:#fff;font-size:.8rem}
+.check.on{background:var(--green);border-color:var(--green)}
+.check:disabled{opacity:.7;cursor:default}
+.msgs{display:grid;gap:6px;padding:12px}
+.msg{max-width:82%;padding:8px 12px;border-radius:18px;background:var(--fill);justify-self:start;overflow-wrap:anywhere}
+.msg.me{justify-self:end;background:var(--blue);color:#fff}
+.msg small{display:block;font-size:.68rem;opacity:.75}
+.compose{display:flex;gap:8px;align-items:center;padding:8px 8px 8px 16px;border-top:1px solid var(--sep)}
+.compose input{flex:1;min-width:0;border:0;background:none;outline:none;padding:6px 0}
+.compose button{color:var(--blue);font-weight:600}
+.hist{padding:4px 0}
+.hist .rowi{min-height:0;padding:8px 16px;align-items:flex-start}
+.hist .q{font-size:.74rem;color:var(--muted);flex:none;width:92px;font-variant-numeric:tabular-nums}
+.hist .ht{font-size:.84rem;flex:1;min-width:0}
+.stepcfg{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1.3fr) auto 28px;gap:6px;align-items:center;padding:6px 16px}
+@media (max-width:520px){.stepcfg{grid-template-columns:minmax(0,1fr) 56px;padding-bottom:10px;border-bottom:1px solid var(--sep)}.stepcfg select{grid-column:1/-1}.stepcfg .chip{justify-self:start}.stepcfg [data-rme]{justify-self:end}}
+.stepcfg input,.stepcfg select{background:var(--fill);border:0;border-radius:8px;padding:6px 8px;min-width:0;font-size:.86rem}
+.stepcfg input[type=number]{text-align:center}
+
+#sync{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:12px;z-index:65;background:var(--card);color:var(--muted);font-size:.78rem;padding:4px 10px;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+#sync.bad{color:var(--red)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;z-index:60;font-weight:500;font-size:.9rem;max-width:calc(100% - 32px)}
+@media (max-width:699px){.toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:70;display:grid;place-items:center;padding:16px}
+.lightbox img{max-height:90vh;border-radius:12px}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s cubic-bezier(.2,.8,.2,1)}@keyframes up{from{opacity:0;translate:0 24px}}}
+.biobtn{margin:6px auto 0;display:inline-flex;gap:10px;align-items:center;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#E3C98A,#B08D45);color:#1b1813;font-weight:600;font-size:.95rem;touch-action:manipulation}
+.biobtn svg{width:22px;height:22px}
+.biooffer{position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;justify-content:center}
+.bio-c{background:var(--card);color:var(--fg);border-radius:18px;padding:16px 18px;max-width:420px;box-shadow:0 10px 40px rgba(0,0,0,.25);text-align:center}
+.bio-c p{margin:6px 0 12px;color:var(--muted);font-size:.88rem}.bio-c .chips{justify-content:center}
+.upd{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:80;background:#C4A25A;color:#1b1813;font-weight:600;border-radius:999px;padding:9px 16px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+</style>
+</head><body>
+
+
+<div id="app"><div style="min-height:100vh;display:grid;place-items:center;background:radial-gradient(90% 55% at 50% 0%,#3b3121 0%,#1b1813 48%,#0e0d0b 100%)"><div style="width:56px;opacity:.9"><svg viewBox="0 0 100 100"><defs><linearGradient id="xg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E3C98A"/><stop offset=".5" stop-color="#C4A25A"/><stop offset="1" stop-color="#A88640"/></linearGradient></defs><g fill="url(#xg0)"><path d="M67.5 8.6H91.5V9.7Q85.2 10.2 81.9 14.4L22.4 90.2Q20.9 92.4 27.5 92.8V93.9H8.5V92.8Q16.4 92.3 21.1 88.8L80.4 13.3Q81.4 10.2 67.5 9.7Z"/><path d="M8.5 8.6H45.5V9.7Q37.6 10.3 38.9 14.8L84.2 87.9Q87.6 92.3 93.5 92.8V93.9H56.5V92.8Q64.3 92.4 61.9 88.2L16.9 15.2Q14.3 10.4 8.5 9.7Z"/></g></svg>
+</div></div></div>
+<script>window.onerror=function(m,u,l){var a=document.getElementById("app");if(a&&!a.querySelector(".login,.wrap"))a.innerHTML="<p style=\"text-align:center;margin-top:35vh;color:#E5372C;font:14px sans-serif;padding:16px\">Erro ao abrir: "+m+" (linha "+l+")</p>"};</script>
+<div id="overlay"></div>
+
+<script>
+(function(){"use strict";
+
+/* ======================= Configuração ======================= */
+const MEDICOS=["Dr. Gonçalo","Dra. Catarina","Dra. Patrícia","Dra. Andreia","Dr. Carlos"];
+const CORES=["A1","A2","A3","A3,5","A4","B1","B2","B3"];
+const LEAD={"coroa": 14, "fixa_impl": 16, "removivel": 19, "goteira_bruxismo": 7, "mantenedor": 6, "rebasamento": 4, "mockup": 15, "faceta": 15, "expansor": 9, "provisorio": 14, "contencao": 6, "goteira_termo": 8, "goteira_branqueamento": 4, "inlay": 17, "outro": 17, "reparacao": 4, "enceramento": 8, "modelo": 1, "alinhadores": 22, "moldeira": 2};
+const MAT3=["Zircónia","Feldspática","Dissilicato"];
+/* g = grupo; mats = materiais/opções (a 1.ª é a sugerida); cf = pede foto ou cor; extra = acrescentado a partir da conversa */
+const TIPOS={
+  coroa:{n:"Coroa",g:"Prótese fixa",mats:[...MAT3,"PMMA"],sobre:true,cf:true},
+  faceta:{n:"Faceta",g:"Prótese fixa",mats:MAT3,cf:true},
+  inlay:{n:"Inlay / Onlay",g:"Prótese fixa",mats:MAT3,cf:true},
+  provisorio:{n:"Provisório",g:"Prótese fixa",mats:["PMMA","Resina"],cf:true},
+  fixa_impl:{n:"Prótese fixa sobre implantes",g:"Prótese fixa",mats:["Zircónia","Provisória em PMMA","Resina"],cf:true},
+  prova:{n:"Prova",g:"Provas",mats:["Prova de ceras","Prova de dentes","Prova de estrutura"]},
+  goteira_bruxismo:{n:"Goteira de bruxismo",g:"Goteiras e branqueamento"},
+  goteira_branqueamento:{n:"Goteira de branqueamento",g:"Goteiras e branqueamento"},
+  contencao:{n:"Contenção ortodôntica",g:"Goteiras e branqueamento"},
+  reparacao:{n:"Reparação",g:"Reparações",mats:["Reparação","Acrescento"]},
+  rebasamento:{n:"Rebasamento",g:"Reparações"},
+  enceramento:{n:"Enceramento diagnóstico",g:"Diagnóstico"},
+  removivel:{n:"Prótese removível",g:"Removível",mats:["Total acrílica","Esquelética","Imediata"],cf:true,extra:true},
+  mockup:{n:"Mock-up",g:"Diagnóstico",extra:true},
+  expansor:{n:"Expansor / Hyrax",g:"Ortodontia",extra:true},
+  mantenedor:{n:"Mantenedor de espaço",g:"Ortodontia",extra:true},
+  alinhadores:{n:"Alinhadores",g:"Ortodontia",extra:true},
+  goteira_termo:{n:"Goteira termoformada",g:"Goteiras e branqueamento",extra:true},
+  moldeira:{n:"Moldeira individual",g:"Diagnóstico",extra:true},
+  modelo:{n:"Impressão de modelo",g:"Diagnóstico",extra:true},
+  outro:{n:"Outro",g:"Outros"},
+};
+const GRUPOS=["Prótese fixa","Provas","Removível","Ortodontia","Goteiras e branqueamento","Reparações","Diagnóstico","Outros"];
+/* Etapas por tipo. r: "p" = dias úteis após o pedido · "a" = dias úteis após a etapa anterior (ou da aprovação) · "d" = dias úteis antes da consulta.
+   ap: o desenho vai para aprovação do médico. Tudo editável em Ajustes. */
+const ETAPAS={
+  coroa:[{n:"Desenho",r:"p",d:3},{n:"Fresado / sinterizado",r:"a",d:2},{n:"Pronto na gaveta",r:"d",d:1}],
+  faceta:[{n:"Desenho",r:"p",d:3,ap:true},{n:"Fresado / sinterizado",r:"a",d:2},{n:"Pronto na gaveta",r:"d",d:1}],
+  inlay:[{n:"Desenho",r:"p",d:3},{n:"Fresado",r:"a",d:2},{n:"Pronto na gaveta",r:"d",d:1}],
+  provisorio:[{n:"Desenho",r:"p",d:1},{n:"Fresado / impresso",r:"a",d:1}],
+  fixa_impl:[{n:"Componentes confirmados",r:"p",d:2},{n:"Desenho",r:"p",d:5},{n:"Estrutura / barras",r:"a",d:3},{n:"Fresado",r:"a",d:2},{n:"Pronto na gaveta",r:"d",d:1}],
+  prova:[{n:"Montagem",r:"d",d:3},{n:"Prova pronta",r:"d",d:1}],
+  removivel:[{n:"Moldeira / modelos",r:"p",d:3},{n:"Montagem de dentes",r:"d",d:5},{n:"Acrilização",r:"d",d:2},{n:"Pronto na gaveta",r:"d",d:1}],
+  goteira_bruxismo:[{n:"Impressão",r:"d",d:2},{n:"Pronto na gaveta",r:"d",d:1}],
+  goteira_branqueamento:[{n:"Pronto na gaveta",r:"d",d:1}],
+  contencao:[{n:"Pronto na gaveta",r:"d",d:1}],
+  goteira_termo:[{n:"Pronto na gaveta",r:"d",d:1}],
+  expansor:[{n:"Bandas / componentes",r:"p",d:1},{n:"Soldadura",r:"a",d:2},{n:"Pronto na gaveta",r:"d",d:1}],
+  mantenedor:[{n:"Bandas",r:"p",d:1},{n:"Pronto na gaveta",r:"d",d:1}],
+  mockup:[{n:"Enceramento",r:"d",d:3,ap:true},{n:"Chaves prontas",r:"d",d:1}],
+  enceramento:[{n:"Enceramento pronto",r:"d",d:1}],
+  alinhadores:[{n:"Impressão",r:"d",d:2},{n:"Prontos",r:"d",d:1}],
+  reparacao:[{n:"Pronto",r:"d",d:0}], rebasamento:[{n:"Pronto",r:"d",d:0}],
+  moldeira:[{n:"Pronta",r:"d",d:1}], modelo:[{n:"Impresso",r:"d",d:0}], outro:[{n:"Pronto",r:"d",d:1}],
+};
+const REFS={p:"dias úteis após o pedido",a:"dias úteis após a etapa anterior",d:"dias úteis antes da consulta"};
+const LABEST={nao_iniciado:"Não iniciado",em_curso:"Em curso",fresado:"Fresado",acabamento:"Acabamento / polimento",pronto:"Pronto na gaveta",stand_by:"Stand-by",falta_componente:"Falta componente",aguarda_dr:"Aguarda ok do Dr.",adiado:"Adiado"};
+
+/* ======================= Datas ======================= */
+const DS=["dom","seg","ter","qua","qui","sex","sáb"],MS=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const MSL=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{const[y,m,d]=s.slice(0,10).split("-").map(Number);return new Date(y,m-1,d)};
+const add=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
+const diff=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+const noSun=s=>parse(s).getDay()===0?add(s,1):s;
+const util=s=>{const w=parse(s).getDay();return w>0&&w<6};
+const addBiz=(s,n)=>{let d=s;while(!util(d))d=add(d,1);let k=0;while(k<n){d=add(d,1);if(util(d))k++}return d};
+const subBiz=(s,n)=>{let d=s,k=0;while(k<n){d=add(d,-1);if(util(d))k++}while(!util(d))d=add(d,-1);return d};
+const TODAY=iso(new Date());
+const fmt=s=>{const d=parse(s);return `${DS[d.getDay()]}, ${d.getDate()} ${MS[d.getMonth()]}`};
+const fmtS=s=>{const d=parse(s);return `${d.getDate()} ${MS[d.getMonth()]}`};
+const fmtY=s=>{const d=parse(s);return `${d.getDate()} ${MS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`};
+const nowS=()=>{const d=new Date();return `${iso(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function rel(s){const d=diff(TODAY,s);if(d===0)return"Hoje";if(d===1)return"Amanhã";if(d===-1)return"Ontem";const x=parse(s);return `${DS[x.getDay()]}, ${x.getDate()} ${MS[x.getMonth()]}${x.getFullYear()!==parse(TODAY).getFullYear()?" "+String(x.getFullYear()).slice(2):""}`}
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+/* ======================= Dados ======================= */
+let JOBS=[];
+/* ======================= Servidor (Apps Script) ======================= */
+const SERVIDOR="https://script.google.com/macros/s/AKfycbzUW36ofn8AVZ8rtA3K7eX3gBo5Th1MATJmUqMd3RWzCNSQrputj48YSdIeT69IBl7u/exec";
+const API=(fn,...args)=>fetch(SERVIDOR,{method:"POST",body:JSON.stringify({fn,args}),redirect:"follow"}).then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(o=>{if(!o.ok)throw new Error(o.erro||"Erro no servidor");return o.r});
+const SRV={pin:null,rev:0,dirty:new Set(),cfgDirty:false,saving:false,fotos:{},pendFotos:{}};
+function carregar(d){
+  JOBS=(d.trabalhos||[]).map(j=>({fotos:[],hi:[],ms:[],etp:{},...j}));
+  SRV.rev=d.rev||0;
+  const c=d.cfg||{};
+  if(c.etapas) for(const k in c.etapas) ETAPAS[k]=c.etapas[k];
+  if(c.extra) for(const k in c.extra) TIPOS[k]=c.extra[k];
+  if(c.off) for(const k in TIPOS) TIPOS[k].off=!!c.off[k];
+}
+function cfgAtual(){const off={},extra={};for(const k in TIPOS){if(TIPOS[k].off)off[k]=1;if(/^u\d/.test(k))extra[k]=TIPOS[k]}return {etapas:ETAPAS,off,extra}}
+function estadoLigacao(t,bad){let el=document.getElementById("sync");if(!el){el=document.createElement("div");el.id="sync";document.body.append(el)}el.textContent=t;el.className=bad?"bad":"";el.hidden=!t}
+async function gravar(){
+  if(SRV.saving||!SRV.pin) return; if(!SRV.dirty.size&&!SRV.cfgDirty) return;
+  SRV.saving=true;
+  try{
+    if(SRV.dirty.size){const ids=[...SRV.dirty];SRV.dirty.clear();const lista=JOBS.filter(j=>ids.includes(j.id));
+      estadoLigacao("A guardar…");const r=await API("guardarTrabalhos",SRV.pin,JSON.stringify(lista));
+      if(!r.ok){ids.forEach(i=>SRV.dirty.add(i));estadoLigacao(r.erro||"Não foi possível guardar.",true)} else {SRV.rev=r.rev;estadoLigacao("")}}
+    if(SRV.cfgDirty){SRV.cfgDirty=false;const r=await API("guardarCfg",SRV.pin,JSON.stringify(cfgAtual()));if(!r.ok){SRV.cfgDirty=true;estadoLigacao(r.erro,true)}}
+  }catch(e){estadoLigacao("Sem ligação. Vou tentar outra vez.",true)}
+  SRV.saving=false;
+  if(SRV.dirty.size) setTimeout(gravar,4000);
+}
+async function atualizar(){
+  if(!SRV.pin||SRV.dirty.size||SRV.saving||state.sheet==="novo") return;
+  try{const r=await API("dados",SRV.pin,SRV.rev);if(r.ok&&!r.igual&&!SRV.dirty.size){const aberto=state.sheet,antes=JOBS;carregar(r.dados);try{novidades(antes,JOBS)}catch(e){}if(state.user)render();state.sheet=aberto}}catch(e){}
+}
+function novidades(antes,depois){
+  const eu=lab()?"LAB":(state.user&&state.user.n)||"", m=new Map(antes.map(j=>[j.id,j])), avisos=[];
+  for(const j of depois){const a=m.get(j.id), hi=j.hi||[], ult=hi[hi.length-1];
+    if(!a){ if(!ult||ult.w!==eu) avisos.push("Novo trabalho: "+(j.u||"")); }
+    else if(hi.length>(a.hi||[]).length && ult && ult.w!==eu) avisos.push((j.u||"Trabalho")+": "+(ult.t||"atualizado"));}
+  if(avisos.length){toast(avisos.length>1?avisos.length+" novidades · "+avisos[0]:avisos[0]);try{navigator.vibrate&&navigator.vibrate([60,40,60])}catch(e){}}
+}
+setInterval(()=>{if(!document.hidden)atualizar()},8000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)atualizar()});
+function fotoSrc(id){
+  if(String(id).startsWith("data:")) return id;
+  if(SRV.fotos[id]) return SRV.fotos[id];
+  if(!SRV.pendFotos[id]){SRV.pendFotos[id]=1;API("verFoto",SRV.pin,id).then(r=>{if(r.ok){SRV.fotos[id]=r.url;document.querySelectorAll(`img[data-fid="${id}"]`).forEach(im=>im.src=r.url)}})}
+  return "data:image/gif;base64,R0lGODlhAQABAIAAAP\/\/\/wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+}
+async function enviarFotos(j,urls){
+  for(const u of urls){try{const r=await API("guardarFoto",SRV.pin,j.id,u);if(r.ok){j.fotos.push(r.id);SRV.fotos[r.id]=u}}catch(e){toast("Uma foto não foi enviada. Tenta outra vez.")}}
+  SRV.dirty.add(j.id); gravar(); if(state.sheet===j.id) renderSheet();
+}
+
+/* ======================= Lista de pacientes do iMED/* ======================= Lista de pacientes do iMED ======================= */
+let IMED=[]; /* [{n:"Nome completo", k:[tokens]}] — carregada em Ajustes a partir da exportação do iMED */
+const normT=n=>(n||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z ]/g," ").split(/\s+/).filter(t=>t.length>1&&!["de","da","do","dos","das","e","sr","sra","dona","dr","dra"].includes(t));
+function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(Math.abs(m-n)>2)return 9;let p=[...Array(n+1).keys()];for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const tok=(a,b)=>a===b||(a.length>=5&&b.length>=5&&lev(a,b)<=1);
+function imedMatch(nome){
+  const T=normT(nome); if(T.length<2||!IMED.length) return null;
+  const c=IMED.filter(p=>tok(T[0],p.k[0])&&T.every(t=>p.k.some(x=>tok(t,x))));
+  return c.length===1?c[0].n:null;
+}
+function aplicarImed(){for(const j of JOBS) if(!j.imed||j.iq!=="ok"){const m=imedMatch(j.u);if(m){j.imed=m;j.iq="ok";j.ic=null}}}
+const nomeC=j=>j.imed||j.u;
+/* Utentes vistos nos últimos dias. No ar: vêm do fecho de caixa (agenda + documentos de vendas importados
+   pelas assistentes). Neste protótipo: consultas do laboratório dos últimos 14 dias (só para demonstrar). */
+function vistos(clin){
+  const ini=add(TODAY,-14),m=new Map();
+  for(const j of JOBS){ if(j.ex||!j.imed||(clin&&j.cl!==clin)) continue;
+    for(const x of j.dt) if(x.d>=ini&&x.d<=TODAY){const k=j.imed; const o=m.get(k); if(!o||o.d<x.d) m.set(k,{n:j.imed,f:j.fi,d:x.d,cl:j.cl})} }
+  return [...m.values()];
+}
+const SUGIM={q:"",lista:[]};
+function pedirSug(nome,cb){const q=nome.trim();if(q.length<3||SUGIM.q===q)return;SUGIM.q=q;API("sugerir",SRV.pin,q).then(r=>{if(SUGIM.q===q){SUGIM.lista=r.lista||[];cb&&cb()}}).catch(()=>{})}
+function sugestoes(nome,clin){
+  const T=normT(nome); if(T.length<1||nome.trim().length<3) return [];
+  const bate=k=>T.every(t=>k.some(x=>tok(t,x)||x.startsWith(t)));
+  const out=[],seen=new Set();
+  for(const v of vistos(clin).sort((a,b)=>b.d.localeCompare(a.d))) if(bate(normT(v.n))&&!seen.has(v.n)){seen.add(v.n);out.push({...v,src:"visto"})}
+  for(const p of (SUGIM.lista||[])) if(out.length<6&&!seen.has(p.n)){seen.add(p.n);out.push({n:p.n,f:p.f,src:"imed"})}
+  return out.slice(0,5);
+}
+
+/* ======================= Estado ======================= */
+const state={user:null,clinic:store.get("xl-clinic"),view:"trabalhos",filter:null,sel:TODAY,calOff:0,cfilter:"todas",
+  sheet:null,box:null,hq:"",htp:"",hcl:"todas",hmax:60,pin:"",perr:"",form:null};
+const WHOL={AVR:"Aveiro",FSC:"Faíscas",LAB:"Milner",GON:"Dr. Gonçalo",CAT:"Dra. Catarina"};
+const lab=()=>state.user&&state.user.r==="lab";
+const admin=()=>state.user&&(state.user.admin||state.user.r==="lab");
+const byId=id=>JOBS.find(j=>j.id===id);
+
+/* ======================= Regras ======================= */
+const ativos=j=>j.dt.filter(x=>!x.o);
+function proxima(j){const a=ativos(j).filter(x=>x.d>=TODAY).sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));return a[0]||null}
+function ultima(j){const a=ativos(j).sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));return a[a.length-1]||null}
+function refDate(j){const p=proxima(j);return p?p.d:(ultima(j)?.d||j.em.slice(0,10))}
+const aprovador=j=>j.med==="Dra. Catarina"?"Dra. Catarina":"Dr. Gonçalo";
+const souAprovador=j=>state.user&&state.user.n===aprovador(j);
+function etapas(j){
+  const cfg=ETAPAS[j.tp]||ETAPAS.outro, alvo=proxima(j), fim=["pronto","entregue","arquivado"].includes(j.st), out=[];
+  let prev=j.em.slice(0,10), prevOk=true;
+  cfg.forEach((e,i)=>{
+    const s=j.etp[i]||{};
+    const feita=!!s.feito||fim||(j.imp&&i<cfg.length-1);
+    const aprovPend=!!e.ap&&!!s.feito&&!s.aprov&&!fim;
+    const ok=feita&&!aprovPend;
+    let due=null;
+    if(e.r==="d"){ if(alvo) due=subBiz(alvo.d,e.d) }
+    else if(e.r==="p") due=addBiz(j.em.slice(0,10),e.d);
+    else if(prevOk) due=addBiz(prev,e.d);
+    if(j.imp&&i===cfg.length-1) due=alvo?subBiz(alvo.d,e.r==="d"?e.d:1):null;
+    if(s.adiado&&!feita) due=s.adiado;
+    const ativo=j.st==="aceite";
+    const pedir=ativo&&!feita&&due&&due<=TODAY&&(e.r!=="a"||prevOk);
+    out.push({i,n:e.n,r:e.r,ap:!!e.ap,due,feita,ok,aprovPend,aprov:s.aprov,adiado:s.adiado,feitoEm:s.feito,
+      pedir,atrasada:pedir&&due<TODAY,espera:e.r==="a"&&!prevOk&&!feita});
+    if(ok){prev=s.aprovEm||s.feito||prev;prevOk=true}else prevOk=false;
+  });
+  return out;
+}
+function estado(j){
+  if(j.st==="entregue") return {l:"Entregue",t:"done",ic:"ok"};
+  if(j.st==="arquivado") return {l:"Arquivado",t:"done",ic:"done"};
+  if(j.st==="sem_data") return {l:"Sem data",t:"",ic:"cal"};
+  if(j.st==="novo") return {l:"Por aceitar",t:"new",ic:"new"};
+  if(j.st==="nova-data") return {l:"Nova data proposta",t:"warn",ic:"warn"};
+  if(j.falta) return {l:"Falta componente",t:"crit",ic:"crit"};
+  const p=proxima(j);
+  if(j.st==="pronto") return {l:p&&p.c?"Pronto · confirmado":"Pronto",t:"ok",ic:"ok"};
+  if(!p) return {l:"Em atraso",t:"crit",ic:"crit"};
+  if(p.c) return {l:"Confirmado",t:"ok",ic:"ok"};
+  const ET=etapas(j);
+  const ap=ET.find(e=>e.aprovPend); if(ap) return {l:`${ap.n} para aprovar`,t:"new",ic:"new"};
+  if(j.labSt==="stand_by") return {l:"Stand-by",t:"warn",ic:"warn"};
+  if(j.labSt==="aguarda_dr") return {l:"Aguarda ok do Dr.",t:"warn",ic:"warn"};
+  if(ET.some(e=>e.atrasada)) return {l:"Etapa atrasada",t:"warn",ic:"warn"};
+  const ad=ET.find(e=>e.adiado&&!e.feita); if(ad) return {l:`${ad.n} adiado p/ ${fmtS(ad.adiado)}`,t:"warn",ic:"warn"};
+  if(diff(TODAY,p.d)<=1) return {l:"Por confirmar",t:"warn",ic:"warn"};
+  const feitas=ET.filter(e=>e.feitoEm); if(feitas.length) return {l:`${feitas[feitas.length-1].n} feito`,t:"",ic:""};
+  if(j.labSt&&LABEST[j.labSt]) return {l:LABEST[j.labSt],t:"",ic:""};
+  return {l:"Em produção",t:"",ic:""};
+}
+const aberto=j=>["novo","aceite","pronto","nova-data"].includes(j.st);
+function perguntas(){ /* o que o Milner tem de responder hoje */
+  const out=[];
+  for(const j of JOBS){ if(j.st!=="aceite") continue; for(const e of etapas(j)) if(e.pedir) out.push({j,e}); }
+  return out.sort((a,b)=>a.e.due.localeCompare(b.e.due));
+}
+function aprovacoes(){ return JOBS.filter(j=>j.st==="aceite"&&souAprovador(j)).flatMap(j=>etapas(j).filter(e=>e.aprovPend).map(e=>({j,e}))); }
+function alertas(){
+  const out=[];
+  for(const j of JOBS){
+    if(!aberto(j)||!visivel(j)) continue;
+    const who=`${j.u} · ${TIPOS[j.tp].n}`, p=proxima(j);
+    if(lab()&&j.st==="novo") out.push({t:"new",m:`Novo pedido: ${j.u}`,s:`${TIPOS[j.tp].n} · ${p?fmt(p.d):"sem data"}`,id:j.id,o:1});
+    if(lab()&&j.pedeConf&&!(p&&p.c)) out.push({t:"new",m:`Pedem confirmação: ${j.u}`,s:`${p?fmt(p.d)+(p.h?" às "+p.h:""):""} · ${j.cl}`,id:j.id,o:1});
+    if(lab()&&j.pedeEstado) out.push({t:"new",m:`Pedem ponto de situação: ${j.u}`,s:who,id:j.id,o:2});
+    if(!lab()&&j.st==="nova-data") out.push({t:"warn",m:`Milner propõe ${fmt(j.novaData)}`,s:who,id:j.id,o:1});
+    if(j.falta) out.push({t:"crit",m:`Falta ${j.falta}`,s:who,id:j.id,o:0});
+    if(j.st==="aceite"&&p){
+      const ET=etapas(j);
+      if(!lab()){
+        const at=ET.find(e=>e.atrasada&&e.i<ET.length-1);
+        if(at) out.push({t:"warn",m:`${at.n} previsto para ${fmtS(at.due)} ainda sem resposta`,s:who,id:j.id,o:3});
+        const ad=ET.find(e=>e.adiado&&!e.feita); if(ad&&!at) out.push({t:"warn",m:`Milner adiou ${ad.n.toLowerCase()} para ${fmt(ad.adiado)}`,s:who,id:j.id,o:3});
+        const ap=ET.find(e=>e.aprovPend); if(ap&&!souAprovador(j)) out.push({t:"new",m:`${ap.n} à espera de aprovação (${aprovador(j)})`,s:who,id:j.id,o:3});
+      } else {
+        const ap=ET.find(e=>e.aprovPend); if(ap) out.push({t:"new",m:`${ap.n} enviado para aprovação de ${aprovador(j)}`,s:who,id:j.id,o:4});
+      }
+      const d=diff(TODAY,p.d);
+      if(lab()&&d>=0&&d<=1&&!p.c) out.push({t:"crit",m:`${p.f==="prova"?"Prova":"Entrega"} ${d===0?"hoje":"amanhã"}${p.h?" às "+p.h:""}. Já está pronto?`,s:who,id:j.id,o:0});
+    }
+    if(j.st==="aceite"&&!p&&ultima(j)&&!j.imp) out.push({t:"crit",m:`Em atraso desde ${fmtS(ultima(j).d)}`,s:who,id:j.id,o:0});
+  }
+  return out.sort((a,b)=>a.o-b.o);
+}
+function visivel(j){ if(state.cfilter==="todas") return true; return j.cl===state.cfilter; }
+
+/* ======================= Ícones ======================= */
+const I={
+  face:'<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M9 9v1.5M15 9v1.5M12 9v4h-1M9 16c1.7 1.3 4.3 1.3 6 0"/>',
+  crit:'<path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2v.1"/>',
+  warn:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  new:'<path d="M3 13.5h5l1.2 3h5.6l1.2-3h5"/><path d="M5.5 5h13l2.5 8.5V19H3v-5.5z"/>',
+  ok:'<path d="M5 12.5 10 17.5 19 7"/>', done:'<path d="M5 12.5 10 17.5 19 7"/>',
+  "":'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  list:'<path d="M9 6.5h11M9 12h11M9 17.5h11"/><path d="M4.5 6.5h.1M4.5 12h.1M4.5 17.5h.1"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', hist:'<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v4.5h4.5M12 7.5V12l3 2"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  left:'<path d="M15 5l-7 7 7 7"/>', right:'<path d="M9 5l7 7-7 7"/>', search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  today:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M9.5 15h5"/>',
+  cam:'<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+};
+const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]??I[""]}</svg>`;
+const tag=e=>`<span class="tag tag-${e.t}">${ico(e.ic)}${esc(e.l)}</span>`;
+const av=(c,sm)=>`<span class="av ${sm?"sm":""} av-${c==="Aveiro"?"A":"F"}" title="${esc(c)}">${c==="Aveiro"?"A":"F"}</span>`;
+const $=s=>document.querySelector(s);
+const group=(title,inner,right="")=>`<div class="group"><div class="gh"><span>${title}</span><span>${right}</span></div><div class="list">${inner}</div></div>`;
+const tipoTxt=j=>`${TIPOS[j.tp].n}${j.mat?" · "+j.mat:""}${j.tp==="coroa"&&j.sob==="Implante"?" s/ implante":""}`;
+
+/* ======================= Entrada ======================= */
+function renderLogin(){
+  $("#app").innerHTML=`<div class="login"><div class="lbg" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="xg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E3C98A"/><stop offset=".5" stop-color="#C4A25A"/><stop offset="1" stop-color="#A88640"/></linearGradient></defs><g fill="url(#xg1)"><path d="M67.5 8.6H91.5V9.7Q85.2 10.2 81.9 14.4L22.4 90.2Q20.9 92.4 27.5 92.8V93.9H8.5V92.8Q16.4 92.3 21.1 88.8L80.4 13.3Q81.4 10.2 67.5 9.7Z"/><path d="M8.5 8.6H45.5V9.7Q37.6 10.3 38.9 14.8L84.2 87.9Q87.6 92.3 93.5 92.8V93.9H56.5V92.8Q64.3 92.4 61.9 88.2L16.9 15.2Q14.3 10.4 8.5 9.7Z"/></g></svg>
+</div><div class="lbox">
+    <div><span class="lx" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><linearGradient id="xg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E3C98A"/><stop offset=".5" stop-color="#C4A25A"/><stop offset="1" stop-color="#A88640"/></linearGradient></defs><g fill="url(#xg2)"><path d="M67.5 8.6H91.5V9.7Q85.2 10.2 81.9 14.4L22.4 90.2Q20.9 92.4 27.5 92.8V93.9H8.5V92.8Q16.4 92.3 21.1 88.8L80.4 13.3Q81.4 10.2 67.5 9.7Z"/><path d="M8.5 8.6H45.5V9.7Q37.6 10.3 38.9 14.8L84.2 87.9Q87.6 92.3 93.5 92.8V93.9H56.5V92.8Q64.3 92.4 61.9 88.2L16.9 15.2Q14.3 10.4 8.5 9.7Z"/></g></svg>
+</span><h1>Executive Lab</h1><p class="lsub">Jesus Mar Couto</p><p class="lask">Introduz o teu código pessoal</p></div>
+    <div class="pin" aria-live="polite">${[0,1,2,3].map(i=>`<i class="${state.pin.length>i?"on":""}"></i>`).join("")}</div>
+    <div class="err">${state.busy?"A entrar…":esc(state.perr)}</div>
+    ${BIO.get()?`<div><button class="biobtn">${ico("face")}Entrar como ${esc(BIO.get().n)}</button></div>`:""}
+    <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-pin="${n}">${n}</button>`).join("")}<span class="blank"></span><button data-pin="0">0</button><button data-pin="del" aria-label="Apagar" style="font-size:1rem">⌫</button></div>
+    <div class="hint">O mesmo código pessoal do fecho de caixa.</div>
+  </div></div>`;
+  $("#overlay").innerHTML="";
+}
+function pinVer(){const b=document.querySelector(".login .pin");if(!b)return renderLogin();b.querySelectorAll("i").forEach((el,i)=>el.classList.toggle("on",state.pin.length>i));const e=document.querySelector(".login .err");if(e)e.textContent=state.busy?"A entrar…":state.perr}
+async function pinKey(k){
+  if(state.busy) return;
+  if(k==="del"){state.pin=state.pin.slice(0,-1);state.perr="";return pinVer()}
+  if(state.pin.length>=4) return;
+  state.pin+=k; state.perr="";
+  if(state.pin.length<4) return pinVer();
+  const pin=state.pin; state.busy=true; pinVer();
+  let r; try{ r=await API("login",pin) }catch(e){ r={ok:false,erro:"Sem ligação ao servidor. Tenta outra vez."} }
+  state.busy=false; state.pin="";
+  if(!r.ok){state.perr=r.erro||"Código não reconhecido.";return pinVer()}
+  entrar(pin,r,false);
+}
+function entrar(cred,r,bio){
+  SRV.pin=cred; carregar(r.dados);
+  state.user={...r.user}; if(!state.clinic&&r.user.clinica&&r.user.r!=="lab"){state.clinic=r.user.clinica;store.set("xl-clinic",state.clinic)}
+  state.cfilter=lab()?"todas":(state.clinic||"todas");
+  if(!lab()&&!state.clinic){state.sheet="ajustes"}
+  render();
+  const na=aprovacoes().length;
+  if(na) toast(`Tens ${na} ${na>1?"desenhos":"desenho"} para aprovar`);
+  else if(lab()){const np=perguntas().length; if(np) toast(`${np} ${np>1?"perguntas":"pergunta"} para responder hoje`)}
+  else {const h=consultasDe(TODAY),f=h.filter(({j,x})=>!(j.st==="pronto"||j.st==="entregue"||x.c)).length,am=consultasDe(addBiz(TODAY,1)).filter(({j,x})=>!x.c&&j.st!=="pronto").length;
+    toast(`Hoje: ${h.length} trabalho${h.length===1?"":"s"}${f?`, ${f} por confirmar`:""} · ${am} para confirmar amanhã`)}
+  guardarLocal();
+  if(!bio) setTimeout(()=>oferecerBio(cred),1800);
+  setTimeout(verNotifAoEntrar,2600);
+}
+
+/* ======================= Ecrã principal ======================= */
+function jobRow(j,{accept=false,conf=false}={}){
+  const e=estado(j),p=proxima(j)||ultima(j),hot=p&&aberto(j)&&j.st!=="pronto"&&!p.c&&diff(TODAY,p.d)<=1&&diff(TODAY,p.d)>=0;
+  return `<button class="rowi" data-open="${j.id}">
+    ${av(j.cl)}
+    <span class="main"><div class="t">${esc(nomeC(j))}</div><div class="s">${p&&p.f==="prova"?`<span class="fase">Prova</span> `:""}${esc(tipoTxt(j))}${j.den?` · ${esc(j.den)}`:""}</div></span>
+    <span class="side"><span class="when ${hot?"hot":""}">${p?rel(p.d)+(p.h?" · "+p.h:""):"sem data"}</span>${accept?`<span class="pill" data-act="aceitar" data-id="${j.id}">Aceitar</span>`:conf?`<span class="pill" data-act="confirmar" data-id="${j.id}">Pode confirmar</span>`:tag(e)}</span>
+  </button>`;
+}
+function tilesDef(){
+  const vis=JOBS.filter(j=>aberto(j)&&visivel(j));
+  const amanha=add(TODAY,1);
+  if(lab()) return {
+    perguntas:{n:"Perguntas de hoje",c:"var(--orange)",ic:"warn",f:j=>j.st==="aceite"&&etapas(j).some(e=>e.pedir)},
+    novos:{n:"Por aceitar",c:"var(--blue)",ic:"new",f:j=>j.st==="novo"},
+    confirmar:{n:"Confirmar",c:"var(--green)",ic:"ok",f:j=>j.pedeConf&&!(proxima(j)?.c)},
+  };
+  return {
+    hoje:{n:"Hoje",c:"var(--blue)",ic:"today",f:j=>proxima(j)?.d===TODAY},
+    amanha:{n:"Confirmar amanhã",c:"var(--orange)",ic:"warn",f:j=>proxima(j)?.d===amanha&&!proxima(j).c},
+    atencao:{n:"Atenção",c:"var(--red)",ic:"crit",f:j=>["crit"].includes(estado(j).t)||estado(j).l==="Etapa atrasada"},
+  };
+}
+function render(){
+  if(!state.user) return renderLogin();
+  const T=tilesDef();
+  const vis=JOBS.filter(j=>aberto(j)&&visivel(j));
+  const tiles=`<div class="tiles">${Object.entries(T).map(([k,F])=>{const n=vis.filter(F.f).length;
+    return `<button class="tile ${n?"":"zero"}" data-filter="${k}" aria-pressed="${state.filter===k&&state.view==="trabalhos"}"><span class="top"><span class="ic" style="background:${F.c}">${ico(F.ic)}</span><b>${n}</b></span><span class="l">${F.n}</span></button>`}).join("")}</div>`;
+  let body="";
+  if(state.view==="trabalhos"){
+    body+=tiles;
+    const clSeg=lab()?"":`<div class="seg sm" role="group" style="margin:-8px 0 18px">${["todas","Aveiro","Faíscas"].map(c=>`<button data-cf="${c}" aria-pressed="${state.cfilter===c}">${c==="todas"?"Ambas as clínicas":c}</button>`).join("")}</div>`;
+    body+=clSeg;
+    if(state.filter){
+      const F=T[state.filter],js=vis.filter(F.f).sort((a,b)=>refDate(a).localeCompare(refDate(b)));
+      const bulk=!lab()&&state.filter==="amanha"&&js.some(j=>!j.pedeConf)?`<div class="btns"><button class="btn fill" data-act="pedirconfall">Pedir confirmação ao Milner (${js.filter(j=>!j.pedeConf).length})</button></div>`:"";
+      body+=`<div class="group"><div class="gh"><span>${F.n}</span><button class="link" data-filter="">Mostrar tudo</button></div><div class="list">${js.length?js.map(j=>jobRow(j,{accept:lab()&&j.st==="novo",conf:lab()&&state.filter==="confirmar"})).join(""):`<div class="empty">Nada aqui</div>`}</div></div>${bulk}`;
+    } else {
+      const al=alertas();
+      const ap=aprovacoes();
+      if(!lab()){ body+=hojeHtml(); body+=amanhaHtml(); }
+      if(ap.length) body+=group(`Para aprovar · ${esc(state.user.n)}`,ap.map(({j,e})=>`<div class="rowi"><span class="aic tag-new">${ico("new")}</span><button class="main" data-open="${j.id}" style="text-align:left"><div class="t">${esc(e.n)} feito · ${esc(j.u)}</div><div class="s">${esc(tipoTxt(j))} · feito a ${fmtS(e.feitoEm)}</div></button><span style="display:flex;gap:6px;flex:none"><button class="pill green" data-etap="ok" data-id="${j.id}" data-i="${e.i}">Aprovar</button><button class="pill ghost" data-etap="skip" data-id="${j.id}" data-i="${e.i}">Dispensar</button></span></div>`).join(""),ap.length);
+      if(lab()){const pq=perguntas(); if(pq.length) body+=group("Perguntas de hoje",pq.map(({j,e})=>perguntaRow(j,e)).join(""),pq.length);}
+      if(lab()){const nv=vis.filter(j=>j.st==="novo"); if(nv.length) body+=group("Novos pedidos",nv.map(j=>jobRow(j,{accept:true})).join(""),nv.length);
+        const cf=vis.filter(j=>j.pedeConf&&!(proxima(j)?.c)); if(cf.length) body+=group("Pedem confirmação",cf.map(j=>jobRow(j,{conf:true})).join(""),cf.length);}
+      if(al.length) body+=group("Precisa de atenção",al.slice(0,12).map(a=>`<button class="rowi" data-open="${a.id}"><span class="aic tag-${a.t}">${ico(a.t)}</span><span class="main"><div class="t">${esc(a.m)}</div><div class="s">${esc(a.s)}</div></span><span class="chev">›</span></button>`).join(""),al.length>12?`${al.length}`:"");
+      const semana=add(TODAY,7),com=vis.filter(j=>proxima(j)&&!(lab()&&j.st==="novo")&&(lab()||proxima(j).d>add(TODAY,1))).sort((a,b)=>(proxima(a).d+proxima(a).h).localeCompare(proxima(b).d+proxima(b).h));
+      const a=com.filter(j=>proxima(j).d<=semana),b=com.filter(j=>proxima(j).d>semana);
+      body+=group(lab()?"Próximos 7 dias":"Depois de amanhã · próximos 7 dias",a.length?a.map(j=>jobRow(j)).join(""):`<div class="empty">Nada marcado</div>`,a.length||"");
+      if(b.length) body+=group("Mais tarde",b.map(j=>jobRow(j)).join(""),b.length);
+      const sd=vis.filter(j=>!proxima(j)&&aberto(j)); const sd2=JOBS.filter(j=>j.st==="sem_data"&&visivel(j));
+      if(sd.length+sd2.length) body+=group("Sem data marcada",[...sd,...sd2].map(j=>jobRow(j)).join(""),sd.length+sd2.length);
+      body+=`<div class="key"><span><i class="av-A"></i>Aveiro</span><span><i class="av-F"></i>Faíscas</span><span><span class="fase">Prova</span> consulta de prova</span></div>`;
+    }
+  } else if(state.view==="calendario") body+=calHtml();
+  else body+=histHtml();
+
+  $("#app").innerHTML=`<main class="wrap">
+    <div class="bar">
+      <button class="who" data-act="ajustes" aria-label="Ajustes">${lab()?"":state.clinic?av(state.clinic,true):""}<span><b>${esc(state.user.n)}</b>${lab()?" · Laboratório":state.clinic?" · "+esc(state.clinic):""}</span></button>
+      <span style="display:flex;gap:8px;align-items:center"><button class="iconbtn" data-act="ajustes" aria-label="Ajustes">${ico("gear")}</button>${lab()?"":`<button class="plus" data-act="novo" aria-label="Novo pedido">${ico("plus")}</button>`}</span>
+    </div>
+    <h1>${lab()?"Laboratório":"Executive Lab"}</h1>
+    <p class="sub">${lab()?"Trabalhos da Jesus Mar Couto":"Pedidos ao Executive Dental Lab"} </p>
+    <div class="seg main" role="group">${[["trabalhos","Trabalhos"],["calendario","Calendário"],["historico","Histórico"]].map(([k,n])=>`<button data-view="${k}" aria-pressed="${state.view===k}">${n}</button>`).join("")}</div>
+    ${body}
+    <nav class="tabbar" aria-label="Navegação">
+      <button data-view="trabalhos" aria-pressed="${state.view==="trabalhos"}">${ico("list")}Trabalhos</button>
+      <button data-view="calendario" aria-pressed="${state.view==="calendario"}">${ico("cal")}Calendário</button>
+      ${lab()?"":`<button data-act="novo" aria-label="Novo pedido"><span class="pl">${ico("plus")}</span>Novo</button>`}
+      <button data-view="historico" aria-pressed="${state.view==="historico"}">${ico("hist")}Histórico</button>
+    </nav></main>`;
+  if(state.view==="historico"){const q=$("#hq");if(q){q.oninput=()=>{state.hq=q.value;state.hmax=60;const pos=q.selectionStart;render();const n=$("#hq");n.focus();n.setSelectionRange(pos,pos)}}}
+  renderSheet();
+}
+
+function perguntaRow(j,e){
+  return `<div class="rowi wrapt" style="flex-wrap:wrap"><span class="aic tag-${e.atrasada?"warn":"new"}">${ico(e.atrasada?"warn":"new")}</span>
+    <button class="main" data-open="${j.id}" style="text-align:left;min-width:160px"><div class="t">${esc(e.n)} de ${esc(j.u)}: já está?</div><div class="s">${esc(tipoTxt(j))} · ${e.adiado?"adiado para ":"previsto "}${rel(e.due).toLowerCase()} · consulta ${p_(j)}</div></button>
+    <span style="display:flex;gap:6px;flex:none;margin-left:auto"><button class="pill green" data-etf="${j.id}" data-i="${e.i}">Feito</button><button class="pill ghost" data-etad="1" data-id="${j.id}" data-i="${e.i}">+24 h</button><button class="pill ghost" data-etad="2" data-id="${j.id}" data-i="${e.i}">+48 h</button></span></div>`;
+}
+const p_=j=>{const p=proxima(j);return p?rel(p.d).toLowerCase()+(p.h?" "+p.h:""):"sem data"};
+
+function consultasDe(d){const L=[];for(const j of JOBS){if(!visivel(j)||j.ex&&false||["arquivado"].includes(j.st))continue;for(const x of ativos(j))if(x.d===d)L.push({j,x})}return L.sort((a,b)=>(a.x.h||"99").localeCompare(b.x.h||"99"))}
+function prontoTag(j,x){
+  if(j.st==="entregue") return `<span class="tag">${ico("ok")}Entregue</span>`;
+  if(j.st==="pronto"||x.c) return `<span class="tag tag-ok">${ico("ok")}${j.st==="pronto"?"Pronto":"Confirmado"}</span>`;
+  if(j.falta) return `<span class="tag tag-crit">${ico("crit")}Falta componente</span>`;
+  if(j.pedeConf) return `<span class="tag tag-new">${ico("new")}Pedido ao Milner</span>`;
+  return `<span class="tag tag-crit">${ico("crit")}Sem confirmação</span>`;
+}
+function linhaDia(j,x,acao){
+  return `<div class="rowi"><button class="main" data-open="${j.id}" style="text-align:left;display:flex;gap:12px;align-items:center;min-width:0"><span class="num" style="width:44px;flex:none;color:var(--muted);font-size:.86rem">${x.h||"—"}</span><span style="min-width:0"><div class="t">${esc(nomeC(j))}</div><div class="s">${x.f==="prova"?`<span class="fase">Prova</span> `:""}${esc(x.x||tipoTxt(j))}${state.cfilter==="todas"?" · "+esc(j.cl):""}</div></span></button>
+    <span class="side">${acao||prontoTag(j,x)}</span></div>`;
+}
+function hojeHtml(){
+  const L=consultasDe(TODAY);
+  const falta=L.filter(({j,x})=>!(j.st==="pronto"||j.st==="entregue"||x.c)).length;
+  return group(`Hoje · ${fmt(TODAY)}`,L.length?L.map(({j,x})=>linhaDia(j,x,!(j.st==="pronto"||j.st==="entregue"||x.c)&&!j.pedeConf?`<button class="pill" data-act="pedirconf" data-id="${j.id}">Já está pronto?</button>`:null)).join(""):`<div class="empty">Nenhum trabalho do laboratório hoje</div>`,L.length?(falta?`<span style="color:var(--red)">${falta} por confirmar</span>`:"tudo pronto"):"");
+}
+function amanhaHtml(){
+  const am=add(TODAY,1)+"", d=util(am)||parse(am).getDay()===6?am:addBiz(TODAY,1);
+  const L=consultasDe(d); const porPedir=L.filter(({j,x})=>!x.c&&j.st!=="pronto"&&!j.pedeConf);
+  const titulo=d===add(TODAY,1)?"Amanhã":DS[parse(d).getDay()].replace(/^./,c=>c.toUpperCase());
+  let h=group(`${titulo} · confirmações · ${fmt(d)}`,L.length?L.map(({j,x})=>linhaDia(j,x,!x.c&&j.st!=="pronto"&&!j.pedeConf?`<button class="pill" data-act="pedirconf" data-id="${j.id}">Pedir confirmação</button>`:null)).join(""):`<div class="empty">Nada marcado</div>`,L.length?`${L.length-porPedir.length}/${L.length} tratados`:"");
+  if(porPedir.length>1) h+=`<div class="btns" style="margin-top:-14px"><button class="btn fill" data-act="pedirconfdia" data-d="${d}">Pedir confirmação de todos ao Milner (${porPedir.length})</button></div>`;
+  return h;
+}
+
+/* ======================= Calendário ======================= */
+function evsNoDia(d){const L=[];for(const j of JOBS){if(!visivel(j)||j.st==="arquivado")continue;for(const x of ativos(j)) if(x.d===d) L.push({j,x})}return L.sort((a,b)=>(a.x.h||"99").localeCompare(b.x.h||"99"))}
+const toneOf=j=>{const t=estado(j).t;return t==="done"?"":t};
+function crow(j,x){return `<button class="crow" data-open="${j.id}"><span class="dot d-${toneOf(j)}"></span><span class="h">${x.h||"—"}</span>${x.f==="prova"?`<span class="fp">PROVA</span>`:""}<span class="nm">${esc(nomeC(j))}</span><span class="ds">${esc(tipoTxt(j))}${j.den?" · "+esc(j.den):""}</span>${state.cfilter==="todas"?av(j.cl,true):""}</button>`}
+function semanaHtml(titulo,seg){
+  let html="",n=0;
+  for(let i=0;i<6;i++){const d=add(seg,i),L=evsNoDia(d);n+=L.length;if(!L.length)continue;
+    html+=`<div class="dayh ${d===TODAY?"hoje":""}"><span>${d===TODAY?"Hoje · ":""}${fmt(d)}</span><span>${L.length}</span></div>${L.map(({j,x})=>crow(j,x)).join("")}`}
+  return group(`${titulo} · ${fmtS(seg)} a ${fmtS(add(seg,5))}`,html?`<div class="wk">${html}</div>`:`<div class="empty">Sem trabalhos</div>`,n||"");
+}
+function calHtml(){
+  const dow=(parse(TODAY).getDay()+6)%7, seg0=add(TODAY,-dow), start=add(seg0,state.calOff*28);
+  const days=[];for(let w=0;w<4;w++)for(let i=0;i<6;i++)days.push(add(start,w*7+i));
+  const end=days[23];
+  const m1=parse(start),m2=parse(end);
+  const title=m1.getMonth()===m2.getMonth()?`${MSL[m1.getMonth()]} ${m1.getFullYear()}`:`${MSL[m1.getMonth()]} – ${MSL[m2.getMonth()]}${m1.getFullYear()!==m2.getFullYear()?" "+m1.getFullYear():""} ${m2.getFullYear()}`;
+  const cells=days.map(d=>{const L=evsNoDia(d),dd=parse(d);
+    return `<button class="cd ${d<TODAY?"past":""} ${d===TODAY?"today":""} ${d===state.sel?"sel":""}" data-day="${d}" aria-label="${fmt(d)}, ${L.length} trabalhos">
+      <span class="m">${dd.getDate()===1||d===start?MS[dd.getMonth()]:""}</span><span class="n">${dd.getDate()}</span>
+      <span class="dots">${L.slice(0,4).map(({j,x})=>`<i class="${x.f==="prova"?"p":"d-"+toneOf(j)}"></i>`).join("")}</span></button>`}).join("");
+  const clSeg=`<div class="seg sm" role="group" style="margin-bottom:14px;max-width:360px">${["todas","Aveiro","Faíscas"].map(c=>`<button data-cf="${c}" aria-pressed="${state.cfilter===c}">${c==="todas"?"Ambas":c}</button>`).join("")}</div>`;
+  const dia=state.sel?(()=>{const L=evsNoDia(state.sel);return `<div class="group"><div class="gh"><span>${state.sel===TODAY?"Hoje · ":""}${fmt(state.sel)}</span>${state.sel!==TODAY?`<button class="link" data-day="">`:`<button class="link" data-day="" hidden>`}Fechar</button></div><div class="list">${L.length?L.map(({j,x})=>`<button class="rowi" data-open="${j.id}">${av(j.cl)}<span class="main"><div class="t">${esc(nomeC(j))}</div><div class="s">${x.f==="prova"?`<span class="fase">Prova</span> `:""}${esc(x.x||tipoTxt(j))}</div></span><span class="side"><span class="when">${x.h||"—"}</span>${tag(estado(j))}</span></button>`).join(""):`<div class="empty">Sem trabalhos neste dia</div>`}</div></div>`})():"";
+  return `${clSeg}<div class="calnav"><h2>${title}</h2><div class="ctl">
+      <button data-cal="-1" aria-label="4 semanas antes">${ico("left")}</button>
+      ${state.calOff!==0?`<button class="today" data-cal="0">Voltar a hoje</button>`:""}
+      <button data-cal="1" aria-label="4 semanas depois">${ico("right")}</button></div></div>
+    <div class="group"><div class="cal"><div class="cal-h">${["seg","ter","qua","qui","sex","sáb"].map(x=>`<span>${x}</span>`).join("")}</div><div class="cal-g">${cells}</div></div>
+    <div class="foot">Toca num dia para o ver · ponto cheio = entrega · anel = prova</div></div>
+    ${dia}
+    ${semanaHtml("Esta semana",seg0)}
+    ${semanaHtml("Próxima semana",add(seg0,7))}`;
+}
+
+/* ======================= Histórico ======================= */
+const souGoncalo=()=>state.user&&state.user.cod==="2001";
+function histHtml(){
+  const nq=s=>(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const q=nq(state.hq.trim());
+  let js=JOBS.filter(j=>!j.ex&&(state.hcl==="todas"||j.cl===state.hcl)&&(!state.htp||j.tp===state.htp)&&(!q||nq(j.u).includes(q)||nq(j.imed).includes(q)));
+  js.sort((a,b)=>refDate(b).localeCompare(refDate(a)));
+  const shown=js.slice(0,state.hmax);let html="";
+  const byM={};for(const j of shown){const d=parse(refDate(j));const k=`${MSL[d.getMonth()]} ${d.getFullYear()}`;(byM[k]=byM[k]||[]).push(j)}
+  for(const k in byM) html+=group(k,byM[k].map(j=>jobRow(j)).join(""),byM[k].length);
+  const used=[...new Set(JOBS.map(j=>j.tp))];
+  let stats="";
+  if(souGoncalo()){const cnt={};for(const j of js)cnt[j.tp]=(cnt[j.tp]||0)+1;const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const av_=js.filter(j=>j.cl==="Aveiro").length;
+    stats=`<div class="stats"><span><b>${js.length}</b> trabalhos</span><span><b>${av_}</b> Aveiro · <b>${js.length-av_}</b> Faíscas</span>${top.map(([k,n])=>`<span><b>${n}</b> ${TIPOS[k].n.toLowerCase()}</span>`).join("")}</div>`}
+  return `<div class="search">${ico("search")}<input id="hq" type="search" placeholder="Procurar utente (nome ou nome do iMED)" value="${esc(state.hq)}" autocomplete="off" aria-label="Procurar utente"></div>
+    <div class="hfilters"><div class="seg sm" role="group">${["todas","Aveiro","Faíscas"].map(c=>`<button data-hcl="${c}" aria-pressed="${state.hcl===c}">${c==="todas"?"Ambas":c}</button>`).join("")}</div>
+      <select id="htp" aria-label="Tipo de trabalho"><option value="">Todos os tipos</option>${used.map(k=>`<option value="${k}" ${state.htp===k?"selected":""}>${TIPOS[k].n}</option>`).join("")}</select></div>
+    ${stats}
+    ${html||`<div class="group"><div class="list"><div class="empty">Nenhum trabalho encontrado</div></div></div>`}
+    ${js.length>state.hmax?`<div class="btns"><button class="btn" data-act="hmore">Mostrar mais (${js.length-state.hmax})</button></div>`:""}
+    <p class="foot">Histórico importado da conversa de WhatsApp com o Executive Dental Lab (out 2025 – set 2026). As fotos não vieram na exportação; cada ficha mostra quantas foram enviadas.</p>`;
+}
+
+/* ======================= Folhas ======================= */
+function sheetPrev(ov){const k=String(state.sheet),b=ov.querySelector(".sh-b"),same=ov.dataset.k===k&&!!b,top=b?b.scrollTop:0;ov.dataset.k=k;
+  if(same) queueMicrotask(()=>{const nb=ov.querySelector(".sh-b");if(nb)nb.scrollTop=top});return {same,top}}
+function renderSheet(){
+  const ov=$("#overlay");
+  if(!state.sheet){ov.innerHTML="";ov.dataset.k="";return}
+  if(state.sheet==="novo") return newSheet(ov);
+  if(state.sheet==="ajustes") return ajustesSheet(ov);
+  const j=byId(state.sheet); if(!j){state.sheet=null;ov.innerHTML="";return}
+  const t=TIPOS[j.tp],e=estado(j),L=lab(),me=L?"lab":"clinica",p=proxima(j);
+  const row=(k,v)=>`<div class="rowi"><span class="main">${k}</span><span class="muted" style="text-align:right">${v}</span></div>`;
+  const btn=[];
+  if(L){
+    if(j.st==="novo") btn.push(`<button class="btn fill" data-act="aceitar" data-id="${j.id}">Aceitar trabalho</button>`,`<button class="btn" data-act="box" data-v="data">Propor outra data</button>`);
+    if(["aceite","pronto"].includes(j.st)&&p&&!p.c) btn.push(`<button class="btn fill" data-act="confirmar" data-id="${j.id}">Pode confirmar ao paciente</button>`);
+    if(j.st==="aceite"){btn.push(`<button class="btn green" data-act="pronto" data-id="${j.id}">Pronto na gaveta</button>`);
+      btn.push(j.falta?`<button class="btn" data-act="recebido" data-id="${j.id}">Componente recebido</button>`:`<button class="btn red" data-act="box" data-v="falta">Falta componente</button>`);
+      btn.push(`<button class="btn red" data-act="adiar" data-id="${j.id}">Não vai estar a tempo</button>`)}
+  } else if(aberto(j)){
+    if(j.st==="nova-data") btn.push(`<button class="btn fill" data-act="aceitardata" data-id="${j.id}">Aceitar ${fmt(j.novaData)}</button>`,`<button class="btn" data-act="recusardata" data-id="${j.id}">Manter ${fmt(p?p.d:j.novaData)}</button>`);
+    if(p&&!p.c&&!j.pedeConf&&diff(TODAY,p.d)<=3) btn.push(`<button class="btn fill" data-act="pedirconf" data-id="${j.id}">Pedir confirmação ao Milner</button>`);
+    if(j.pedeConf&&p&&!p.c) btn.push(`<div class="note" style="text-align:center;padding:0">À espera da confirmação do Milner</div>`);
+    if(!j.pedeEstado) btn.push(`<button class="btn" data-act="pedirestado" data-id="${j.id}">Pedir ponto de situação</button>`);
+    else btn.push(`<div class="note" style="text-align:center;padding:0">Ponto de situação pedido</div>`);
+    btn.push(`<button class="btn" data-act="box" data-v="alterar">Alterar data da consulta</button>`);
+    if(p&&diff(TODAY,p.d)<=0) btn.push(`<button class="btn" data-act="entregue" data-id="${j.id}">Marcar como entregue</button>`);
+  }
+  let box="";
+  if(L&&state.box==="falta")box=`<div class="group"><div class="list"><div class="field"><label for="b-falta">Falta</label><input id="b-falta" placeholder="pilar, análogo, bandas…"></div></div><div class="note">A clínica vê o aviso na hora.</div></div><div class="btns"><button class="btn red" data-act="falta" data-id="${j.id}">Avisar a clínica</button></div>`;
+  if(L&&state.box==="data")box=`<div class="group"><div class="list"><div class="field"><label for="b-data">Nova data</label><input type="date" id="b-data" min="${TODAY}" value="${p?add(p.d,1):TODAY}"></div></div></div><div class="btns"><button class="btn fill" data-act="propor" data-id="${j.id}">Enviar proposta</button></div>`;
+  if(!L&&state.box==="alterar")box=`<div class="group"><div class="list"><div class="field"><label for="b-ad">Nova data</label><input type="date" id="b-ad" value="${p?p.d:TODAY}"></div><div class="field"><label for="b-ah">Hora</label><input type="time" id="b-ah" value="${p?p.h:""}"></div></div><div class="note">O Milner é avisado da alteração.</div></div><div class="btns"><button class="btn fill" data-act="alterar" data-id="${j.id}">Guardar nova data</button><button class="btn red" data-act="desmarcou" data-id="${j.id}">Paciente desmarcou</button></div>`;
+  const estadoLab=L&&["aceite","novo"].includes(j.st)?group(j.pedeEstado?"Responder ao ponto de situação":"Estado no laboratório",`<div class="field col"><div class="chips">${Object.entries(LABEST).filter(([k])=>!["falta_componente","pronto"].includes(k)).map(([k,v])=>`<button class="chip" data-labst="${k}" data-id="${j.id}" aria-pressed="${j.labSt===k}">${v}</button>`).join("")}</div></div>`):"";
+  const datas=ativos(j).length||j.dt.length?group("Consultas",j.dt.slice().sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h)).map(x=>`<div class="rowi"><span class="main"><div class="t" style="${x.o?"text-decoration:line-through;color:var(--muted)":""}">${x.f==="prova"?"Prova":x.f==="retificacao"?"Retificação":"Entrega"} · ${fmt(x.d)}${x.h?" às "+x.h:""}</div>${x.x?`<div class="s">${esc(x.x)}</div>`:""}</span>${x.o?`<span class="tag">Desmarcada</span>`:x.c?`<span class="tag tag-ok">${ico("ok")}Confirmado</span>`:x.d<TODAY?`<span class="tag">Passou</span>`:""}</div>`).join("")):"";
+  const et=etapas(j);
+  const _prev=sheetPrev(ov); ov.innerHTML=`<div class="scrim" data-close></div><div class="sheet ${_prev.same?"noanim":""}" role="dialog" aria-modal="true" aria-label="${esc(j.u)}">
+    <div class="sh-h"><button class="l" data-close>Fechar</button><h2>${esc(j.id)}</h2><span></span></div>
+    <div class="sh-b">
+      <div class="hero"><h3>${esc(nomeC(j))}</h3>${imedLinha(j)}<p>${av(j.cl,true)}${esc(tipoTxt(j))} · ${esc(j.cl)}</p>${tag(e)}</div>
+      ${group("Pedido",row("Clínica",esc(j.cl))+row("Médico",esc(j.med||"—"))+row("Trabalho",esc(tipoTxt(j)))+row("Dentes",esc(j.den||"—"))+row("Cor",esc(j.cor||"—"))+row("Fotos",j.fotos.length?`${j.fotos.length} anexadas`:j.fot?`${j.fot} enviadas no WhatsApp`:"—")+row("Pedido",`${esc(j.por||"—")} · ${fmtY(j.em)}`))}
+      ${j.obs?group("Observações",`<div class="rowi wrapt"><span class="main"><div class="s" style="color:var(--fg);font-size:.92rem">${esc(j.obs)}</div></span></div>`):""}
+      ${group("Fotos",`<div class="rowi"><div class="photos big">${j.fotos.map((f,i)=>`<img src="${fotoSrc(f)}" data-fid="${esc(f)}" alt="Foto ${i+1}" data-zoom>`).join("")}${j.fotos.length?"":`<span class="muted" style="font-size:.86rem">${j.fot?`${j.fot} enviadas no WhatsApp (não vieram na exportação)`:"Sem fotos"}</span>`}</div></div><div class="fotozona" style="padding-top:4px"><label class="addph">${ico("cam")} Tirar ou anexar foto<input type="file" id="j-ph" accept="image/*" multiple></label></div>`,j.fotos.length||"")}
+      ${j.falta?group("Falta componente",`<div class="rowi"><span class="aic tag-crit">${ico("crit")}</span><span class="main">${esc(j.falta)}</span></div>`):""}
+      ${datas}
+      ${btn.length?`<div class="btns">${btn.join("")}</div>`:""}${box}
+      ${estadoLab}
+      ${et.length&&aberto(j)?group("Etapas no laboratório",et.map(x=>etapaRow(j,x,L)).join(""),"dias úteis"):""}
+      ${group("Mensagens",`<div class="msgs">${j.ms.length?j.ms.map(m=>`<div class="msg ${m.de===me?"me":""}"><small>${m.de==="lab"?"Milner":"Clínica"} · ${esc(m.q.length>10?fmtS(m.q)+" "+m.q.slice(11,16):m.q)}</small>${esc(m.txt)}</div>`).join(""):`<span class="muted" style="text-align:center">Sem mensagens</span>`}</div>
+        <form class="compose" id="msg"><input id="msg-in" placeholder="Escrever ${L?"à clínica":"ao Milner"}" aria-label="Mensagem" autocomplete="off"><button type="submit">Enviar</button></form>`)}
+      ${group("Histórico",`<div class="hist">${j.hi.slice().reverse().map(h=>`<div class="rowi"><span class="q">${esc(fmtS(h.q))}${h.q.length>10?" "+h.q.slice(11,16):""}</span><span class="ht">${esc(h.t)}</span></div>`).join("")}</div>`,j.imp?"importado do WhatsApp":"")}
+    </div></div>`;
+  const jph=$("#j-ph"); if(jph) jph.onchange=async ev=>{const n=ev.target.files.length,urls=[];for(const f of ev.target.files) urls.push(await shrink(f)); toast("A enviar fotos…"); await enviarFotos(j,urls); log(j,`${state.user.n} acrescentou ${n} foto${n>1?"s":""}`); j.ms.push({de:L?"lab":"clinica",txt:`📷 ${n} foto${n>1?"s":""} nova${n>1?"s":""}`,q:nowS()}); toast("Fotos guardadas no trabalho"); render()};
+  $("#msg").onsubmit=ev=>{ev.preventDefault();const v=$("#msg-in").value.trim();if(!v)return;j.ms.push({de:me,txt:v,q:nowS()});log(j,`${state.user.n}: mensagem`);render();$("#msg-in")?.focus()};
+}
+
+function etapaRow(j,x,L){
+  let sub,acts="";
+  if(x.feita&&x.aprovPend){
+    sub=`Feito a ${fmtS(x.feitoEm)} · à espera de aprovação de ${aprovador(j)}`;
+    if(souAprovador(j)) acts=`<button class="pill green" data-etap="ok" data-id="${j.id}" data-i="${x.i}">Aprovar</button><button class="pill ghost" data-etap="skip" data-id="${j.id}" data-i="${x.i}">Dispensar</button>`;
+  } else if(x.feita){
+    sub=x.feitoEm?`Feito a ${fmtS(x.feitoEm)}${x.aprov==="ok"?` · aprovado por ${aprovador(j)}`:x.aprov==="skip"?" · aprovação dispensada":""}`:"Feito";
+  } else if(x.espera){ sub=`Começa a contar quando a etapa anterior estiver ${ETAPAS[j.tp]?.[x.i-1]?.ap?"aprovada":"feita"}`;
+  } else if(x.due){ sub=`${x.adiado?"Adiado para":x.pedir?"Perguntar":"Previsto"} ${fmt(x.due)}${x.atrasada?" · sem resposta":""}`;
+    if(L&&j.st==="aceite") acts=`<button class="pill green" data-etf="${j.id}" data-i="${x.i}">Feito</button><button class="pill ghost" data-etad="1" data-id="${j.id}" data-i="${x.i}">+24 h</button><button class="pill ghost" data-etad="2" data-id="${j.id}" data-i="${x.i}">+48 h</button>`;
+  } else sub="—";
+  const cls=x.feita&&!x.aprovPend?"on":"";
+  return `<div class="rowi wrapt" style="flex-wrap:wrap">
+    <button class="check ${cls}" ${L&&x.feitoEm&&j.st==="aceite"?`data-etundo="${j.id}" data-i="${x.i}"`:"disabled"} aria-label="${esc(x.n)}">${cls?"✓":x.aprovPend?"…":""}</button>
+    <span class="main" style="min-width:150px"><div class="t">${esc(x.n)}${x.ap?` <span class="tag tag-new" style="font-size:.66rem">aprovação</span>`:""}</div><div class="s" style="${x.atrasada||x.adiado&&!x.feita?"color:var(--orange)":""}">${sub}</div></span>
+    ${acts?`<span style="display:flex;gap:6px;flex:none;margin-left:auto">${acts}</span>`:""}</div>`;
+}
+
+function imedLinha(j){
+  const pedido=j.imed&&j.imed!==j.u?`Pedido como «${esc(j.u)}» · `:"";
+  if(j.imed&&j.iq==="ok") return `<p class="imedn" style="margin:-2px 0 8px">${pedido}iMED${j.fi?` · ficha n.º ${esc(j.fi)}`:""}</p>`;
+  const pode=!lab();
+  if(j.imed&&j.iq==="prov") return `<p class="imedn" style="margin:-2px 0 6px;color:var(--orange)">${pedido}correspondência provável no iMED${j.fi?` (ficha ${esc(j.fi)})`:""}</p>${pode?`<div class="chips" style="justify-content:center;margin-bottom:10px"><button class="chip" data-imok="${j.id}">É este utente</button><button class="chip" data-imno="${j.id}">Não é</button></div>`:""}`;
+  if(j.ic&&j.ic.length) return `<p class="imedn" style="margin:-2px 0 6px;color:var(--orange)">Há ${j.ic.length} utentes no iMED com este nome${pode?". Qual é?":""}</p>${pode?`<div class="chips" style="justify-content:center;margin-bottom:10px">${j.ic.map((c,i)=>`<button class="chip" data-impick="${j.id}" data-i="${i}">${esc(c.n)}${c.f?` · ${esc(c.f)}`:""}</button>`).join("")}</div>`:""}`;
+  return `<p class="imedn" style="margin:-2px 0 8px;color:var(--orange)">Não encontrado na lista do iMED</p>`;
+}
+
+/* ----- Novo pedido ----- */
+function blankForm(){return {u:"",med:MEDICOS[0],tp:"",mat:"",sob:"Dente",den:[],cor:"",corOutro:"",datas:[{d:"",h:"",f:""}],obs:"",fotos:[]}}
+function teethHtml(sel){
+  const up=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28],lo=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+  const b=n=>`<button type="button" data-tooth="${n}" aria-pressed="${sel.includes(String(n))}">${n}</button>`;
+  return `<div class="teeth" role="group" aria-label="Dentes">${up.map(b).join("")}<span class="gap"></span>${lo.map(b).join("")}</div>
+   <div class="chips" style="margin-top:8px"><button type="button" class="chip" data-arch="Arcada superior" aria-pressed="${sel.includes("Arcada superior")}">Arcada superior</button><button type="button" class="chip" data-arch="Arcada inferior" aria-pressed="${sel.includes("Arcada inferior")}">Arcada inferior</button></div>`;
+}
+function newSheet(ov){
+  const F=state.form||(state.form=blankForm());
+  const t=TIPOS[F.tp];
+  const gAb=F.grp==="__"?null:(F.grp||(F.tp&&TIPOS[F.tp].g)||null);
+  const gruposVis=GRUPOS.filter(g=>Object.keys(TIPOS).some(k=>TIPOS[k].g===g&&!TIPOS[k].off));
+  const tipos=`<div class="chips">${gruposVis.map(g=>`<button type="button" class="chip" data-grp="${esc(g)}" aria-pressed="${gAb===g}">${esc(g)}</button>`).join("")}</div>`+
+    (gAb?`<div class="tgrid" style="margin-top:10px">${Object.keys(TIPOS).filter(k=>TIPOS[k].g===gAb&&!TIPOS[k].off).map(k=>`<button type="button" class="tbtn" data-tp="${k}" aria-pressed="${F.tp===k}">${esc(TIPOS[k].n)}${LEAD[k]?`<small>habitual ${LEAD[k]} dias</small>`:""}</button>`).join("")}</div>`:"");
+  const cfNeeded=t&&t.cf;
+  const _prev=sheetPrev(ov); ov.innerHTML=`<div class="scrim" data-close></div><div class="sheet ${_prev.same?"noanim":""}" role="dialog" aria-modal="true" aria-label="Novo pedido">
+    <div class="sh-h"><button type="button" class="l" data-close>Cancelar</button><h2>Novo pedido</h2><button type="button" class="r" data-act="enviar">Enviar</button></div>
+    <div class="sh-b">
+      <div class="group"><div class="list">
+        <div class="field"><label for="f-u">Utente</label><input id="f-u" value="${esc(F.u)}" placeholder="Nome" autocomplete="off" list="imed-list"></div>
+        ${confirmaNome(F)}
+        <div class="field"><label for="f-med">Médico</label><select id="f-med">${MEDICOS.map(m=>`<option ${F.med===m?"selected":""}>${m}</option>`).join("")}</select></div>
+        <div class="field"><span class="lb">Clínica</span><span class="muted" style="flex:1;text-align:right">${esc(state.clinic||"—")} · pedido por ${esc(state.user.n)}</span></div>
+      </div></div>
+      <div class="group"><div class="gh"><span>Tipo de trabalho</span></div><div class="list"><div class="field col">${tipos}</div></div></div>
+      ${t&&(t.mats||t.sobre)?`<div class="group"><div class="gh"><span>${esc(t.n)}</span></div><div class="list">
+        ${t.sobre?`<div class="field col"><span class="lb">Sobre</span><div class="chips">${["Dente","Implante"].map(s=>`<button type="button" class="chip" data-sob="${s}" aria-pressed="${F.sob===s}">${s}</button>`).join("")}</div></div>`:""}
+        ${t.mats?`<div class="field col"><span class="lb">${F.tp==="prova"?"Tipo de prova":F.tp==="reparacao"||F.tp==="removivel"?"Tipo":"Material"}</span><div class="chips">${t.mats.map(m=>`<button type="button" class="chip" data-mat="${esc(m)}" aria-pressed="${F.mat===m}">${esc(m)}</button>`).join("")}</div></div>`:""}
+      </div></div>`:""}
+      <div class="group"><div class="gh"><span>Dentes</span><span>${esc(F.den.join(", "))}</span></div><div class="list"><div class="field col">${teethHtml(F.den)}</div></div></div>
+      <div class="group"><div class="gh"><span>Cor e fotos</span></div><div class="list"><div class="field col"><div class="chips">${[...CORES,"Outro"].map(c=>`<button type="button" class="chip" data-cor="${c}" aria-pressed="${F.cor===c}">${c}</button>`).join("")}</div>
+        ${F.cor==="Outro"?`<input id="f-coro" value="${esc(F.corOutro)}" placeholder="ex.: A3 com cervical mais intensa" style="background:var(--fill);border:0;border-radius:8px;padding:8px;text-align:left">`:""}</div>
+        <div class="fotozona"><div class="photos">${F.fotos.map((s,i)=>`<span style="position:relative;display:inline-block"><img src="${s}" alt="Foto ${i+1}" data-zoom><button type="button" data-rmph="${i}" aria-label="Remover foto" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--fg);color:var(--bg);font-size:.8rem">×</button></span>`).join("")}</div><label class="addph">${ico("cam")} Tirar ou anexar foto<input type="file" id="f-ph" accept="image/*" multiple></label></div>
+      </div>${cfNeeded?`<div class="note">O Milner pede sempre a foto ou, na falta dela, a cor.</div>`:""}</div>
+      <div class="group"><div class="gh"><span>Datas da consulta</span></div><div class="list">${F.datas.map((x,i)=>`<div class="field col">
+          <div class="drow"><input type="date" data-di="${i}" data-k="d" value="${x.d}" min="${TODAY}" aria-label="Data"><input type="time" data-di="${i}" data-k="h" value="${x.h}" aria-label="Hora">${i?`<button type="button" class="x" data-rmd="${i}" aria-label="Remover data">×</button>`:"<span></span>"}</div>
+          ${x.d?`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${x.f?"":`<span class="dask">Esta data é de entrega ou de prova?</span>`}<div class="seg sm" role="group">${[["entrega","Entrega"],["prova","Prova"]].map(([k,n])=>`<button type="button" data-df="${i}" data-v="${k}" aria-pressed="${x.f===k}">${n}</button>`).join("")}</div></div>`:""}
+        </div>`).join("")}
+        <button type="button" class="rowi" data-act="addd" style="color:var(--blue);font-weight:500">＋ Adicionar outra data (prova, entrega…)</button>
+      </div><div class="note" id="f-dn">${t&&LEAD[F.tp]?`No histórico, ${t.n.toLowerCase()} costuma ser pedida com ${LEAD[F.tp]} dias de antecedência.`:""}${dateWarn(F)}</div></div>
+      <div class="group"><div class="list"><div class="field col"><label for="f-obs">Observações</label><textarea id="f-obs" placeholder="Indicações para o laboratório">${esc(F.obs)}</textarea></div></div></div>
+      <div class="note err" id="f-err"></div>
+      ${F.askFoto?`<div class="semfoto" id="semfoto"><b>Este pedido não tem fotos. Deseja enviar sem foto?</b><div class="chips"><button type="button" class="pill" data-act="fotoagora">${ico("cam")} Tirar ou anexar foto</button><button type="button" class="pill ghost" data-act="semfoto">Enviar sem foto</button></div></div>`:`<div class="btns"><button type="button" class="btn fill" data-act="enviar">Enviar ao laboratório</button></div>`}
+    </div></div>`;
+  const keep=()=>{F.u=$("#f-u").value;F.med=$("#f-med").value;F.obs=$("#f-obs").value;if($("#f-coro"))F.corOutro=$("#f-coro").value};
+  ["#f-u","#f-obs"].forEach(s=>$(s).addEventListener("input",keep));
+  $("#f-u").addEventListener("change",()=>{keep();F.imed=null;F.fi=null;F.nmNao=false;SUGIM.lista=[];newSheet(ov);pedirSug(F.u,()=>{if(state.sheet==="novo"&&!F.imed)newSheet(ov)});});
+  ov._sug=()=>sugestoes(F.u,state.clinic);
+  if(IMED.length&&!document.getElementById("imed-list")){const dl=document.createElement("datalist");dl.id="imed-list";dl.innerHTML=IMED.slice(0,6000).map(p=>`<option value="${esc(p.n)}">`).join("");document.body.append(dl)} $("#f-med").onchange=keep; if($("#f-coro"))$("#f-coro").oninput=keep;
+  ov.querySelectorAll("[data-di]").forEach(inp=>inp.onchange=()=>{keep();F.datas[+inp.dataset.di][inp.dataset.k]=inp.value;newSheet(ov)});
+  $("#f-ph").onchange=async ev=>{keep();for(const f of ev.target.files)F.fotos.push(await shrink(f));F.askFoto=false;newSheet(ov)};
+  ov._keep=keep;
+}
+function confirmaNome(F){
+  if(F.imed) return `<div class="field"><span class="lb">Nome completo</span><span style="flex:1;text-align:right;font-size:.86rem;color:var(--green)">${esc(F.imed)}${F.fi?` · ficha ${esc(F.fi)}`:""} ✓ <button type="button" class="link" data-nmx="1">mudar</button></span></div>`;
+  if(F.u.trim().length<3||F.nmNao) return F.nmNao?`<div class="field"><span class="lb">Nome completo</span><span style="flex:1;text-align:right;font-size:.84rem;color:var(--orange)">Não confirmado. O pedido segue com o nome escrito.</span></div>`:"";
+  const S=sugestoes(F.u,state.clinic);
+  if(!S.length) return `<div class="field"><span class="lb">Nome completo</span><span style="flex:1;text-align:right;font-size:.84rem;color:var(--muted)">${SUGIM.q===F.u.trim()?"Sem correspondência no iMED. Confirma o nome.":"A procurar no iMED…"}</span></div>`;
+  const quando=d=>d===TODAY?"visto hoje":d===add(TODAY,-1)?"visto ontem":"visto a "+fmtS(d);
+  return `<div class="field col"><span class="lb" style="color:var(--fg);font-weight:600">${S.length===1?`É ${/a$/.test(S[0].n.split(" ")[0])?"a":"o"} ${esc(S[0].n)}?`:"Qual destes utentes?"}</span>
+    <div class="chips">${S.map((c,i)=>`<button type="button" class="chip" data-nmok="${i}" style="text-align:left">${S.length===1?"Sim, é":esc(c.n)}<small style="display:block;font-weight:400;opacity:.75;font-size:.72rem">${c.src==="visto"?quando(c.d)+" em "+esc(c.cl):"lista do iMED"}${c.f?" · ficha "+esc(c.f):""}</small></button>`).join("")}<button type="button" class="chip" data-nmno="1">${S.length===1?"Não, é outra pessoa":"Nenhum destes"}</button></div></div>`;
+}
+function dateWarn(F){
+  const first=F.datas.filter(x=>x.d).map(x=>x.d).sort()[0]; if(!first||!F.tp) return "";
+  const d=diff(TODAY,first),h=LEAD[F.tp]||7;
+  if(d<=1) return ` <span style="color:var(--red)">Muito em cima: ${fmt(first)}. O Milner recebe o pedido como urgente.</span>`;
+  if(d<Math.min(h,7)) return ` <span style="color:var(--orange)">Mais curto do que o habitual (${d} dias).</span>`;
+  return "";
+}
+function shrink(file){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.82))};im.onerror=()=>res(r.result);im.src=r.result};r.readAsDataURL(file)})}
+function enviar(){
+  const ov=$("#overlay"); ov._keep&&ov._keep();
+  const F=state.form,t=TIPOS[F.tp],err=m=>{$("#f-err").textContent=m;$("#f-err").scrollIntoView({block:"center"})};
+  if(!F.u.trim()) return err("Falta o nome do utente.");
+  if(!t) return err("Escolhe o tipo de trabalho.");
+  const ds=F.datas.filter(x=>x.d);
+  if(!ds.length) return err("Indica pelo menos uma data de consulta.");
+  if(ds.some(x=>!x.f)) return err("Diz se cada data é de entrega ou de prova.");
+  const cor=F.cor==="Outro"?F.corOutro.trim():F.cor;
+  if(t.cf&&!cor&&!F.fotos.length) return err("Envia a foto ou, na falta dela, a cor.");
+  if(!F.fotos.length&&!F.semFotoOk){F.askFoto=true;newSheet(ov);const b=$("#semfoto");b&&b.scrollIntoView({block:"center",behavior:"smooth"});return;}
+  const j={id:"L"+Date.now().toString(36),u:F.u.trim(),cl:state.clinic||"Faíscas",tp:F.tp,mat:F.mat||null,sob:t.sobre?F.sob:null,den:F.den.join(", ")||null,cor:cor||null,med:F.med,obs:F.obs.trim()||null,
+    fot:0,fotos:[],por:state.user.n,em:nowS(),st:"novo",labSt:null,falta:null,imp:false,
+    dt:ds.map(x=>({d:x.d,h:x.h,f:x.f,x:x.f==="prova"&&F.tp==="prova"?F.mat:(x.f==="prova"?"Prova":tipoTxtF(F)),c:false,o:false})),hi:[],ms:[],etp:{},pedeConf:null,pedeEstado:null};
+  if(F.imed){j.imed=F.imed;j.fi=F.fi;j.iq="ok"} else {j.imed=F.nmNao?null:imedMatch(j.u); j.iq=j.imed?"ok":null}
+  log(j,`Pedido enviado por ${state.user.n} (${j.cl})`);
+  JOBS.push(j); const urls=F.fotos.slice(); state.form=null; state.sheet=null; if(urls.length) enviarFotos(j,urls); toast(`Pedido enviado ao Milner · ${fmt(ds.map(x=>x.d).sort()[0])}`); render();
+}
+const tipoTxtF=F=>`${TIPOS[F.tp].n}${F.mat?" · "+F.mat:""}`;
+
+/* ----- Ajustes ----- */
+function ajustesSheet(ov){
+  const cfg=admin()?group("Etapas e alertas por tipo",Object.keys(TIPOS).filter(k=>ETAPAS[k]&&!TIPOS[k].off).map(k=>`<div class="field col" style="padding-bottom:4px"><span class="lb" style="color:var(--fg);font-weight:600">${esc(TIPOS[k].n)}</span></div>${ETAPAS[k].map((e,i)=>`<div class="stepcfg"><input value="${esc(e.n)}" data-ecfg="${k}" data-i="${i}" data-k="n" aria-label="Etapa"><input type="number" min="0" max="60" value="${e.d}" data-ecfg="${k}" data-i="${i}" data-k="d" aria-label="Dias úteis"><select data-ecfg="${k}" data-i="${i}" data-k="r" aria-label="A contar de">${Object.entries(REFS).map(([r,t])=>`<option value="${r}" ${e.r===r?"selected":""}>${t}</option>`).join("")}</select><button class="chip" data-eap="${k}" data-i="${i}" aria-pressed="${!!e.ap}" title="O médico aprova esta etapa">Aprovação</button><button data-rme="${k}" data-i="${i}" aria-label="Remover etapa" style="width:28px;height:28px;border-radius:50%;background:var(--fill);color:var(--muted)">×</button></div>`).join("")}<button class="rowi" data-adde="${k}" style="color:var(--blue);font-size:.86rem;min-height:36px">＋ Etapa</button>`).join(""),"dias úteis"):"";
+  const cfgNote=admin()?`<p class="foot" style="margin:-18px 0 22px">Dias úteis são de segunda a sexta. Quando chega o dia de cada etapa, o Milner responde Feito, +24 h ou +48 h; um adiamento à sexta passa para segunda ou terça. Nas etapas com "Aprovação", o médico do trabalho recebe o aviso ao entrar e escolhe Aprovar ou Dispensar; a etapa seguinte só começa a contar depois disso.</p>`:"";
+  const tiposCfg=admin()?group("Tipos de trabalho",Object.keys(TIPOS).map(k=>`<div class="rowi"><span class="main"><div class="t">${esc(TIPOS[k].n)}</div><div class="s">${esc((TIPOS[k].mats||[]).join(" · ")||"—")}${TIPOS[k].extra?" · visto na conversa":""}</div></span><button class="chip" data-tpoff="${k}" aria-pressed="${!TIPOS[k].off}">${TIPOS[k].off?"Oculto":"Ativo"}</button></div>`).join("")+`<div class="field col"><div class="drow" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto"><input id="nt-n" placeholder="Novo tipo" aria-label="Nome do novo tipo"><input id="nt-m" placeholder="Materiais (separados por vírgula)" aria-label="Materiais"><button class="pill" data-act="addtipo">Adicionar</button></div></div>`):"";
+  const _prev=sheetPrev(ov); ov.innerHTML=`<div class="scrim" data-close></div><div class="sheet ${_prev.same?"noanim":""}" role="dialog" aria-modal="true" aria-label="Ajustes">
+    <div class="sh-h"><span></span><h2>Ajustes</h2><button class="r" data-close>OK</button></div>
+    <div class="sh-b">
+      ${group("Sessão",`<div class="rowi"><span class="main"><div class="t">${esc(state.user.n)}</div><div class="s">${lab()?"Laboratório":"Clínica"}${state.user.admin?" · supervisor":""}</div></span><button class="link" data-act="sair">Sair</button></div>`)}
+      ${BIO.get()?group("Entrada rápida",`<div class="rowi"><span class="main"><div class="t">Rosto ou impressão digital</div><div class="s">Ativo neste aparelho para ${esc(BIO.get().n)}</div></span><button class="link" data-act="biooff">Desligar</button></div>`):""}
+      ${group("Notificações",`<div class="rowi"><span class="main"><div class="t">Avisos no telefone</div><div class="s">${esc(NOTIF.estado())}</div></span><button class="link" data-act="notif">${NOTIF.on()?"Desligar":"Ativar"}</button></div>`)}
+      ${lab()?"":`${group("Clínica deste dispositivo",`<div class="field col"><div class="seg" role="group">${["Faíscas","Aveiro"].map(c=>`<button data-dev="${c}" aria-pressed="${state.clinic===c}">${c}</button>`).join("")}</div></div>`)}<p class="foot" style="margin:-18px 0 22px">Fica guardada neste aparelho. Os pedidos feitos aqui saem sempre com esta clínica.</p>`}
+      ${state.user.admin?group("Lista de pacientes do iMED",`<div class="field col"><div class="s" style="font-size:.86rem">A lista de utentes do iMED está guardada no servidor (só nome e n.º de ficha). ${JOBS.filter(j=>j.imed).length} trabalhos ligados ao nome completo. Para a atualizar, exporta outra vez a lista do iMED e carrega-a aqui.</div>
+        <label class="addph">${ico("list")} Atualizar lista do iMED<input type="file" id="imed-file" accept=".csv,.txt,.xlsx,.xls"></label></div>`):""}
+      ${state.user.admin?group("Histórico do WhatsApp",`<div class="field col"><div class="s" style="font-size:.86rem">${JOBS.filter(j=>j.imp).length?`<b>${JOBS.filter(j=>j.imp).length}</b> trabalhos importados da conversa com o laboratório.`:"Ainda não importado. Carrega o ficheiro <b>executive-lab-historico.json</b>."}</div><label class="addph">${ico("hist")} Importar histórico<input type="file" id="hist-file" accept=".json"></label></div>`):""}
+      ${cfg}${cfgNote}${tiposCfg}
+      ${admin()?"":`<p class="foot">As etapas e os tipos de trabalho são geridos pelo Dr. Gonçalo, pela Dra. Catarina e pelo Milner.</p>`}
+    </div></div>`;
+  const fi=ov.querySelector("#imed-file"); if(fi) fi.onchange=async ev=>{const f=ev.target.files[0]; if(!f) return; try{await lerImed(f); const r=await API("guardarImed",SRV.pin,JSON.stringify(IMED.map(p=>({n:p.n,f:p.f})))); if(!r.ok) throw new Error(r.erro); aplicarImed(); IMED.forEach(()=>0); toast(`${r.n} utentes guardados no servidor`); render()}catch(e){toast("Não consegui ler o ficheiro. Envia-o em Excel ou CSV.")}};
+  const hf=ov.querySelector("#hist-file"); if(hf) hf.onchange=async ev=>{const f=ev.target.files[0]; if(!f) return; try{toast("A importar…"); const r=await API("importarHistorico",SRV.pin,await f.text()); if(!r.ok) throw new Error(r.erro); const d=await API("dados",SRV.pin,0); carregar(d.dados); toast(`${r.n} trabalhos importados`); render()}catch(e){toast("Não consegui importar: "+(e.message||e))}};
+  ov.querySelectorAll("[data-ecfg]").forEach(el=>el.onchange=()=>{const e=ETAPAS[el.dataset.ecfg][+el.dataset.i];e[el.dataset.k]=el.dataset.k==="d"?Math.max(0,+el.value||0):el.value;SRV.cfgDirty=true;gravar()});
+}
+async function lerImed(file){
+  let rows=[];
+  if(/\.xlsx?$/i.test(file.name)){
+    if(!window.XLSX) await new Promise((ok,ko)=>{const sc=document.createElement("script");sc.src="https:\/\/cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";sc.onload=ok;sc.onerror=ko;document.head.append(sc)});
+    const wb=XLSX.read(await file.arrayBuffer(),{type:"array"}); rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false});
+  } else { const t=await file.text(); const sep=(t.split("\n")[0].match(/;/g)||[]).length>(t.split("\n")[0].match(/,/g)||[]).length?";":","; rows=t.split(/\r?\n/).map(l=>l.split(sep).map(x=>x.replace(/^"|"$/g,"").trim())); }
+  rows=rows.filter(r=>r&&r.length);
+  const head=(rows[0]||[]).map(h=>String(h||"").toLowerCase());
+  let col=head.findIndex(h=>/nome/.test(h)&&!/m[ée]dico/.test(h)); let start=1;
+  if(col<0){ /* sem cabeçalho: escolhe a coluna com mais texto de várias palavras */
+    const sc=head.map((_,i)=>rows.slice(0,50).filter(r=>/^[A-Za-zÀ-ÿ' .-]+$/.test(String(r[i]||""))&&String(r[i]).trim().split(/\s+/).length>=2).length); col=sc.indexOf(Math.max(...sc)); start=0; }
+  const seen=new Set(); IMED=[];
+  for(const r of rows.slice(start)){const n=String(r[col]||"").replace(/\s+/g," ").trim(); if(n.split(" ").length<2) continue; const key=n.toLowerCase(); if(seen.has(key)) continue; seen.add(key); IMED.push({n:n.replace(/\b([a-zà-ÿ])/g,(m,c,o,str)=>n===n.toUpperCase()?c.toUpperCase():m),k:normT(n)});}
+  if(IMED.some(p=>p.n===p.n.toUpperCase())) IMED.forEach(p=>{p.n=p.n.toLowerCase().replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(De|Da|Do|Dos|Das|E)\b/g,w=>w.toLowerCase())});
+}
+const log=(j,t)=>{j.hi.push({q:nowS(),w:lab()?"LAB":state.user?.n||"",t});SRV.dirty.add(j.id);clearTimeout(SRV.tg);SRV.tg=setTimeout(gravar,300)};
+
+/* ======================= Eventos ======================= */
+document.addEventListener("pointerdown",ev=>{const pk=ev.target.closest&&ev.target.closest("[data-pin]");if(pk&&!state.user){state.pdn=Date.now();pinKey(pk.dataset.pin)}});
+document.addEventListener("click",ev=>{
+  const T=ev.target;
+  const pk=T.closest("[data-pin]"); if(pk){if(Date.now()-(state.pdn||0)>700)pinKey(pk.dataset.pin);return}
+  if(!state.user&&T.closest(".biobtn")){entrarBio();return}
+  if(!state.user) return;
+  const F=state.form, ovk=$("#overlay")._keep;
+  const gp=T.closest("[data-grp]"); if(gp){ovk&&ovk();const g=gp.dataset.grp;F.grp=(F.grp||(F.tp&&TIPOS[F.tp].g))===g?"__":g;const ks=Object.keys(TIPOS).filter(k=>TIPOS[k].g===g&&!TIPOS[k].off);if(ks.length===1&&F.grp===g){F.tp=ks[0];F.mat=(TIPOS[F.tp].mats||[""])[0]||""}newSheet($("#overlay"));return}
+  const tp=T.closest("[data-tp]"); if(tp){ovk&&ovk();F.tp=tp.dataset.tp;F.mat=(TIPOS[F.tp].mats||[""])[0]||"";newSheet($("#overlay"));return}
+  const rph=T.closest("[data-rmph]"); if(rph){ovk&&ovk();F.fotos.splice(+rph.dataset.rmph,1);newSheet($("#overlay"));return}
+  const nok=T.closest("[data-nmok]"); if(nok){ovk&&ovk();const c=$("#overlay")._sug()[+nok.dataset.nmok];if(c){F.imed=c.n;F.fi=c.f}newSheet($("#overlay"));return}
+  const nno=T.closest("[data-nmno]"); if(nno){ovk&&ovk();F.nmNao=true;newSheet($("#overlay"));return}
+  const nmx=T.closest("[data-nmx]"); if(nmx){ovk&&ovk();F.imed=null;F.fi=null;F.nmNao=false;newSheet($("#overlay"));return}
+  const mt=T.closest("[data-mat]"); if(mt){ovk&&ovk();F.mat=mt.dataset.mat;newSheet($("#overlay"));return}
+  const sb=T.closest("[data-sob]"); if(sb){ovk&&ovk();F.sob=sb.dataset.sob;newSheet($("#overlay"));return}
+  const th=T.closest("[data-tooth]"); if(th){ovk&&ovk();const n=th.dataset.tooth;F.den=F.den.includes(n)?F.den.filter(x=>x!==n):[...F.den.filter(x=>!x.startsWith("Arcada")),n].sort((a,b)=>+a-+b);newSheet($("#overlay"));return}
+  const ar=T.closest("[data-arch]"); if(ar){ovk&&ovk();const n=ar.dataset.arch;F.den=F.den.includes(n)?F.den.filter(x=>x!==n):[...F.den.filter(x=>x.startsWith("Arcada")),n];newSheet($("#overlay"));return}
+  const cr=T.closest("[data-cor]"); if(cr){ovk&&ovk();F.cor=F.cor===cr.dataset.cor?"":cr.dataset.cor;newSheet($("#overlay"));return}
+  const dfb=T.closest("[data-df]"); if(dfb){ovk&&ovk();F.datas[+dfb.dataset.df].f=dfb.dataset.v;newSheet($("#overlay"));return}
+  const rmd=T.closest("[data-rmd]"); if(rmd){ovk&&ovk();F.datas.splice(+rmd.dataset.rmd,1);newSheet($("#overlay"));return}
+  const dev=T.closest("[data-dev]"); if(dev){state.clinic=dev.dataset.dev;store.set("xl-clinic",state.clinic);state.cfilter=state.clinic;render();return}
+  const tpo=T.closest("[data-tpoff]"); if(tpo){const k=tpo.dataset.tpoff;TIPOS[k].off=!TIPOS[k].off;SRV.cfgDirty=true;gravar();renderSheet();return}
+  const rme=T.closest("[data-rme]"); if(rme){ETAPAS[rme.dataset.rme].splice(+rme.dataset.i,1);SRV.cfgDirty=true;gravar();renderSheet();return}
+  const ade=T.closest("[data-adde]"); if(ade){ETAPAS[ade.dataset.adde].push({n:"Nova etapa",r:"d",d:1});SRV.cfgDirty=true;gravar();renderSheet();return}
+  const ls=T.closest("[data-labst]"); if(ls){const j=byId(ls.dataset.id);j.labSt=ls.dataset.labst;j.pedeEstado=null;log(j,`Milner: ${LABEST[j.labSt]}`);j.ms.push({de:"lab",txt:`Estado: ${LABEST[j.labSt]}`,q:nowS()});toast("Clínica informada");render();return}
+  const v=T.closest("[data-view]"); if(v){state.view=v.dataset.view;if(v.closest(".tabbar"))state.filter=null;state.sheet=null;render();window.scrollTo(0,0);return}
+  const fl=T.closest("[data-filter]"); if(fl){const k=fl.dataset.filter;state.filter=k&&state.filter!==k?k:null;state.view="trabalhos";render();return}
+  const cf=T.closest("[data-cf]"); if(cf){state.cfilter=cf.dataset.cf;render();return}
+  const hc=T.closest("[data-hcl]"); if(hc){state.hcl=hc.dataset.hcl;state.hmax=60;render();return}
+  const cn=T.closest("[data-cal]"); if(cn){const k=+cn.dataset.cal;state.calOff=k===0?0:state.calOff+k;if(k===0)state.sel=TODAY;render();return}
+  const d=T.closest("[data-day]"); if(d){const was=state.sel;state.sel=d.dataset.day&&d.dataset.day!==state.sel?d.dataset.day:TODAY;render();if(state.sel!==TODAY&&state.sel!==was)document.querySelector(".calnav")&&window.scrollTo({top:document.querySelector(".cal").getBoundingClientRect().bottom+window.scrollY-60,behavior:"smooth"});return}
+  const z=T.closest("[data-zoom]"); if(z){const lb=document.createElement("div");lb.className="lightbox";lb.innerHTML=`<img src="${z.src}" alt="">`;lb.onclick=()=>lb.remove();document.body.append(lb);return}
+  const ef=T.closest("[data-etf]"); if(ef){const j=byId(ef.dataset.etf),i=+ef.dataset.i,c=(ETAPAS[j.tp]||ETAPAS.outro)[i];
+    j.etp[i]={...(j.etp[i]||{}),feito:TODAY}; log(j,`${c.n}: feito`);
+    if(c.ap){toast(`${aprovador(j)} vai receber o ${c.n.toLowerCase()} para aprovar`)} else toast(`${c.n} marcado como feito`);
+    if(i===(ETAPAS[j.tp]||ETAPAS.outro).length-1&&!c.ap){j.st="pronto";j.labSt="pronto"}
+    render();return}
+  const ed=T.closest("[data-etad]"); if(ed){const j=byId(ed.dataset.id),i=+ed.dataset.i,n=+ed.dataset.etad,c=(ETAPAS[j.tp]||ETAPAS.outro)[i];
+    const nd=addBiz(TODAY,n); j.etp[i]={...(j.etp[i]||{}),adiado:nd}; log(j,`Milner adiou ${c.n.toLowerCase()} ${n*24} h → ${fmt(nd)}`); toast(`${c.n} adiado para ${fmt(nd)}`); render();return}
+  const ea=T.closest("[data-etap]"); if(ea){const j=byId(ea.dataset.id),i=+ea.dataset.i,c=(ETAPAS[j.tp]||ETAPAS.outro)[i],ok=ea.dataset.etap==="ok";
+    j.etp[i]={...(j.etp[i]||{}),aprov:ok?"ok":"skip",aprovEm:TODAY}; log(j,`${c.n} ${ok?"aprovado":"— aprovação dispensada"} por ${state.user.n}`);
+    j.ms.push({de:"clinica",txt:`${c.n} ${ok?"aprovado":"sem aprovação: podes avançar"} (${state.user.n})`,q:nowS()});
+    if(i===(ETAPAS[j.tp]||ETAPAS.outro).length-1){j.st="pronto";j.labSt="pronto"}
+    toast(ok?"Aprovado. O Milner pode avançar.":"Dispensado. O Milner pode avançar."); render();return}
+  const eu=T.closest("[data-etundo]"); if(eu){const j=byId(eu.dataset.etundo),i=+eu.dataset.i,c=(ETAPAS[j.tp]||ETAPAS.outro)[i]; delete j.etp[i]; log(j,`${c.n}: desmarcado`); render();return}
+  const iok=T.closest("[data-imok]"); if(iok){const j=byId(iok.dataset.imok);j.iq="ok";log(j,`Nome do iMED confirmado: ${j.imed} (${state.user.n})`);toast("Nome confirmado");render();return}
+  const ino=T.closest("[data-imno]"); if(ino){const j=byId(ino.dataset.imno);log(j,`Correspondência no iMED rejeitada: ${j.imed}`);j.imed=null;j.fi=null;j.iq=null;render();return}
+  const ipk=T.closest("[data-impick]"); if(ipk){const j=byId(ipk.dataset.impick),c=j.ic[+ipk.dataset.i];j.imed=c.n;j.fi=c.f;j.iq="ok";j.ic=null;log(j,`Utente do iMED escolhido: ${c.n} (${state.user.n})`);toast("Utente ligado ao iMED");render();return}
+  const eap=T.closest("[data-eap]"); if(eap){const e=ETAPAS[eap.dataset.eap][+eap.dataset.i]; e.ap=!e.ap; SRV.cfgDirty=true;gravar();renderSheet(); return}
+  const a=T.closest("[data-act]");
+  if(a){
+    const j=a.dataset.id&&byId(a.dataset.id),p=j&&proxima(j);
+    switch(a.dataset.act){
+      case "novo": state.form=state.form||blankForm(); state.sheet="novo"; break;
+      case "enviar": ev.stopPropagation(); return enviar();
+      case "semfoto": ev.stopPropagation(); F.semFotoOk=true; return enviar();
+      case "fotoagora": ev.stopPropagation(); F.askFoto=false; newSheet($("#overlay")); $("#f-ph")?.click(); return;
+      case "addd": ovk&&ovk(); F.datas.push({d:"",h:"",f:""}); return newSheet($("#overlay"));
+      case "ajustes": state.sheet="ajustes"; break;
+      case "sair": gravar(); state.user=null; SRV.pin=null; JOBS=[]; state.sheet=null; state.view="trabalhos"; state.filter=null; break;
+      case "notif": (NOTIF.on()?desligarNotif():ativarNotif()).then(()=>render()); break;
+      case "biooff": BIO.del(); store.del("xl-bio-nao"); toast("Entrada com rosto desligada neste aparelho"); break;
+      case "hmore": state.hmax+=100; break;
+      case "addtipo": {const n=$("#nt-n").value.trim(); if(!n) return; const k="u"+Date.now(); TIPOS[k]={n,g:"Outros",mats:$("#nt-m").value.split(",").map(x=>x.trim()).filter(Boolean)}; if(!TIPOS[k].mats.length) delete TIPOS[k].mats; ETAPAS[k]=[{n:"Pronto na gaveta",r:"d",d:1}]; SRV.cfgDirty=true; gravar(); toast(`Tipo "${n}" adicionado`); break;}
+      case "aceitar": j.st="aceite"; log(j,"Aceite pelo Milner"); toast(`Aceite · ${j.u}`); break;
+      case "confirmar": if(p){p.c=true} j.pedeConf=null; log(j,"Milner: pode confirmar ao paciente"); toast(`Confirmado · ${j.u}`); break;
+      case "pedirconf": j.pedeConf=nowS(); log(j,`${state.user.n} pediu confirmação`); toast("Pedido de confirmação enviado"); break;
+      case "pedirconfdia": {const d=a.dataset.d; consultasDe(d).forEach(({j:x,x:dx})=>{if(!dx.c&&x.st!=="pronto"&&!x.pedeConf){x.pedeConf=nowS();log(x,`${state.user.n} pediu confirmação`)}}); toast("Pedidos de confirmação enviados ao Milner"); break;}
+      case "pedirconfall": {const T2=tilesDef().amanha; JOBS.filter(x=>aberto(x)&&visivel(x)&&T2.f(x)&&!x.pedeConf).forEach(x=>{x.pedeConf=nowS();log(x,`${state.user.n} pediu confirmação`)}); toast("Pedidos de confirmação enviados"); break;}
+      case "pedirestado": j.pedeEstado=nowS(); log(j,`${state.user.n} pediu ponto de situação`); toast("Pedido enviado ao Milner"); break;
+      case "box": state.box=state.box===a.dataset.v?null:a.dataset.v; break;
+      case "propor": {const x=$("#b-data").value; if(!x) return; j.novaData=x; j.st="nova-data"; state.box=null; log(j,`Milner propõe ${fmt(x)}`); toast("Proposta enviada à clínica"); break;}
+      case "aceitardata": if(p){log(j,`Clínica aceitou ${fmt(j.novaData)} (era ${fmt(p.d)})`);p.d=j.novaData;p.c=false} j.novaData=null; j.st="aceite"; break;
+      case "recusardata": log(j,"Clínica mantém a data"); j.novaData=null; j.st="novo"; break;
+      case "alterar": {const x=$("#b-ad").value,h=$("#b-ah").value; if(!x) return; if(p){log(j,`Consulta alterada: ${fmtS(p.d)}${p.h?" "+p.h:""} → ${fmtS(x)}${h?" "+h:""}`);p.d=x;p.h=h;p.c=false} else {j.dt.push({d:x,h,f:"entrega",x:"",c:false,o:false});log(j,`Nova data: ${fmtS(x)}`)} if(j.st==="sem_data")j.st="aceite"; state.box=null; toast("Data alterada. O Milner foi avisado."); break;}
+      case "desmarcou": if(p){p.o=true;log(j,`Paciente desmarcou (${fmtS(p.d)})`)} state.box=null; break;
+      case "falta": {const x=$("#b-falta").value.trim(); if(!x) return; j.falta=x; j.labSt="falta_componente"; state.box=null; log(j,`Falta componente: ${x}`); j.ms.push({de:"lab",txt:`Falta componente: ${x}`,q:nowS()}); toast("Clínica avisada"); break;}
+      case "recebido": log(j,`Componente recebido (${j.falta})`); j.falta=null; j.labSt="em_curso"; break;
+      case "pronto": (ETAPAS[j.tp]||ETAPAS.outro).forEach((c,i)=>{if(!j.etp[i]?.feito) j.etp[i]={...(j.etp[i]||{}),feito:TODAY}}); j.st="pronto"; j.labSt="pronto"; j.pedeEstado=null; log(j,"Pronto na gaveta"); toast("Marcado como pronto"); break;
+      case "adiar": j.labSt="adiado"; log(j,"Milner: não vai estar a tempo"); j.ms.push({de:"lab",txt:"Não vai estar pronto a tempo. Temos de adiar.",q:nowS()}); toast("Clínica avisada"); break;
+      case "entregue": j.st="entregue"; log(j,`Entregue (${state.user.n})`); break;
+    }
+    ev.stopPropagation(); render(); return;
+  }
+  const o=T.closest("[data-open]"); if(o){state.sheet=o.dataset.open;state.box=null;renderSheet();return}
+  if(T.closest("[data-close]")){state.sheet=null;state.box=null;render();return}
+});
+document.addEventListener("change",ev=>{ if(ev.target.id==="htp"){state.htp=ev.target.value;state.hmax=60;render()} });
+document.addEventListener("keydown",ev=>{
+  if(!state.user&&/^[0-9]$/.test(ev.key)){pinKey(ev.key);return}
+  if(!state.user&&ev.key==="Backspace"){pinKey("del");return}
+  if(ev.key==="Escape"&&state.sheet){state.sheet=null;render()}
+});
+let tt;function toast(m){let el=$(".toast");if(!el){el=document.createElement("div");el.className="toast";el.setAttribute("role","status");document.body.append(el)}el.textContent=m;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2400)}
+
+/* ======================= App instalada: rosto/impressão digital, cópia local, atualizações ======================= */
+const BIO={get(){try{return JSON.parse(localStorage.getItem("xl-bio")||"null")}catch(e){return null}},set(v){try{localStorage.setItem("xl-bio",JSON.stringify(v))}catch(e){}},del(){try{localStorage.removeItem("xl-bio");localStorage.removeItem("xl-dados")}catch(e){}}};
+const b64=a=>btoa(String.fromCharCode(...new Uint8Array(a))), unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0)), rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+async function bioDisponivel(){try{return !!(window.PublicKeyCredential&&navigator.credentials&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}}
+function guardarLocal(){if(!BIO.get()||!state.user)return;try{localStorage.setItem("xl-dados",JSON.stringify({user:state.user,dados:{rev:SRV.rev,trabalhos:JOBS,cfg:cfgAtual()}}))}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)guardarLocal()});
+async function oferecerBio(cred){
+  if(BIO.get()||store.get("xl-bio-nao")||!state.user||!(await bioDisponivel()))return;
+  const ov=document.createElement("div");ov.className="biooffer";
+  ov.innerHTML=`<div class="bio-c"><b>Entrar com o rosto ou a impressão digital?</b><p>Neste aparelho, da próxima vez abres a app sem código.</p><div class="chips"><button class="pill" data-bio="sim">Ativar</button><button class="pill ghost" data-bio="nao">Agora não</button></div></div>`;
+  document.body.append(ov);
+  ov.onclick=async ev=>{const b=ev.target.closest("[data-bio]");if(!b)return;
+    if(b.dataset.bio==="nao"){store.set("xl-bio-nao","1");ov.remove();return}
+    try{
+      const c=await navigator.credentials.create({publicKey:{rp:{name:"Executive Lab"},user:{id:rnd(16),name:state.user.n,displayName:state.user.n},challenge:rnd(32),pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required",residentKey:"discouraged"},timeout:60000}});
+      const r=await API("registarAparelho",cred,((navigator.userAgent.match(/\(([^)]+)\)/)||[])[1]||"aparelho").slice(0,60));
+      if(!r.ok)throw new Error(r.erro);
+      BIO.set({id:b64(c.rawId),token:r.token,n:state.user.n});guardarLocal();ov.remove();
+      toast("Pronto. Da próxima vez entras com o rosto ou a impressão digital.");
+    }catch(e){ov.remove();toast("Não foi possível ativar. Continua a entrar com o código.")}
+  };
+}
+function sairJa(){state.user=null;SRV.pin=null;JOBS=[];state.sheet=null;state.view="trabalhos";state.filter=null;render()}
+async function entrarBio(){
+  const b=BIO.get();if(!b||state.busy)return;
+  try{await navigator.credentials.get({publicKey:{challenge:rnd(32),allowCredentials:[{type:"public-key",id:unb64(b.id)}],userVerification:"required",timeout:60000}})}
+  catch(e){state.perr="Não foi reconhecido. Tenta outra vez ou usa o código.";return pinVer()}
+  let cache=null;try{cache=JSON.parse(localStorage.getItem("xl-dados")||"null")}catch(e){}
+  if(cache&&cache.dados&&cache.user){
+    entrar(b.token,{ok:true,user:cache.user,dados:cache.dados},true);
+    API("login",b.token).then(r=>{
+      if(r.ok){if(!SRV.dirty.size&&!SRV.saving){const ab=state.sheet;carregar(r.dados);state.user={...r.user};state.sheet=ab;render();guardarLocal()}}
+      else{BIO.del();sairJa();state.perr="Este aparelho tem de voltar a entrar com o código.";renderLogin()}
+    }).catch(()=>estadoLigacao("Sem ligação. A mostrar a última cópia.",true));
+    return;
+  }
+  state.busy=true;pinVer();
+  let r;try{r=await API("login",b.token)}catch(e){r={ok:false,erro:"Sem ligação ao servidor. Tenta outra vez."}}
+  state.busy=false;
+  if(!r.ok){if(!/ligação/.test(r.erro||""))BIO.del();state.perr=r.erro||"Erro";return renderLogin()}
+  entrar(b.token,r,true);
+}
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(reg=>{
+    const ativar=()=>reg.waiting&&reg.waiting.postMessage("ativar");
+    const avisar=()=>{if(!state.user)return ativar();if(document.querySelector(".upd"))return;const el=document.createElement("button");el.className="upd";el.textContent="Há uma versão nova · Atualizar";el.onclick=()=>{gravar();ativar()};document.body.append(el)};
+    if(reg.waiting)avisar();
+    reg.addEventListener("updatefound",()=>{const w=reg.installing;w&&w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller)avisar()})});
+    setInterval(()=>reg.update().catch(()=>{}),20*60e3);
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden)reg.update().catch(()=>{})});
+  }).catch(()=>{});
+  let rl=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!rl){rl=true;location.reload()}});
+}
+/* ======================= Notificações no telefone ======================= */
+const IDB={db:null,abrir(){return this.db||(this.db=new Promise((ok,ko)=>{const r=indexedDB.open("xl",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)}))},
+  async get(k){const d=await this.abrir();return new Promise(ok=>{const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(undefined)})},
+  async set(k,v){const d=await this.abrir();return new Promise(ok=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=()=>ok();t.onerror=()=>ok()})}};
+const NOTIF={
+  suporta(){return "serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window},
+  iosSemInstalar(){return /iPhone|iPad|iPod/.test(navigator.userAgent)&&!navigator.standalone&&!matchMedia("(display-mode: standalone)").matches},
+  on(){return store.get("xl-notif")==="1"&&this.suporta()&&Notification.permission==="granted"},
+  estado(){if(this.on())return "Ativas neste aparelho";if(this.iosSemInstalar())return "No iPhone, primeiro adicione a app ao ecrã principal";if(!this.suporta())return "Este aparelho não suporta";if(Notification.permission==="denied")return "Bloqueadas nas definições do telefone";return "Desligadas"}
+};
+const b64uBytes=t=>{t=t.replace(/-/g,"+").replace(/_/g,"/");while(t.length%4)t+="=";return unb64(t)};
+async function subscreverPush(cred){
+  const reg=await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub){const k=await API("chavePush",cred);if(!k.ok)throw new Error(k.erro);sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uBytes(k.k)})}
+  const r=await API("registarPush",cred,JSON.stringify(sub));if(!r.ok)throw new Error(r.erro);
+  await IDB.set("pt",r.pt);await IDB.set("srv",SERVIDOR);if(!(await IDB.get("desde")))await IDB.set("desde",Date.now());
+  store.set("xl-notif","1");store.set("xl-notif-ep",sub.endpoint);
+}
+async function ativarNotif(){
+  if(NOTIF.iosSemInstalar()){toast("No iPhone: Partilhar → Adicionar ao ecrã principal, e abrir a app pelo ícone.");return false}
+  if(!NOTIF.suporta()){toast("Este aparelho não suporta notificações.");return false}
+  const p=await Notification.requestPermission();
+  if(p!=="granted"){toast(p==="denied"?"As notificações estão bloqueadas nas definições do telefone.":"Notificações não ativadas.");return false}
+  try{await subscreverPush(SRV.pin);toast("Notificações ativas. Recebes os avisos mesmo com a app fechada.");return true}
+  catch(e){toast("Não consegui ativar as notificações: "+(e.message||e));return false}
+}
+async function desligarNotif(){
+  try{const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();if(sub){await API("desligarPush",SRV.pin,sub.endpoint).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+  store.del("xl-notif");store.set("xl-notif-nao","1");toast("Notificações desligadas neste aparelho");
+}
+/* depois de entrar: renova a subscrição em silêncio, ou oferece ativar (uma vez) */
+async function verNotifAoEntrar(){
+  if(!state.user||!NOTIF.suporta())return;
+  if(store.get("xl-notif")==="1"&&Notification.permission==="granted"){try{await subscreverPush(SRV.pin)}catch(e){}return}
+  if(store.get("xl-notif-nao")||Notification.permission==="denied"||NOTIF.iosSemInstalar())return;
+  for(let i=0;i<60&&document.querySelector(".biooffer");i++)await new Promise(r=>setTimeout(r,1000));
+  if(!state.user||document.querySelector(".biooffer"))return;
+  const ov=document.createElement("div");ov.className="biooffer";
+  ov.innerHTML=`<div class="bio-c"><b>Receber avisos no telefone?</b><p>Quando chega um pedido ou o trabalho muda de estado, o telefone avisa, mesmo com a app fechada.</p><div class="chips"><button class="pill" data-nt="sim">Ativar</button><button class="pill ghost" data-nt="nao">Agora não</button></div></div>`;
+  document.body.append(ov);
+  ov.onclick=async ev=>{const b=ev.target.closest("[data-nt]");if(!b)return;ov.remove();
+    if(b.dataset.nt==="nao"){store.set("xl-notif-nao","1");return}
+    await ativarNotif();if(state.view==="ajustes")render()};
+}
+
+if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data==="novidades")atualizar()});
+
+render();
+
+})();
+</script>
+
+</body></html>
