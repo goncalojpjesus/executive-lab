@@ -803,7 +803,12 @@ function renderSheet(){
     if(p&&diff(TODAY,p.d)<=0) btn.push(`<button class="btn" data-act="entregue" data-id="${j.id}">Marcar como entregue</button>`);
   }
   let box="";
-  if(L&&state.box==="falta")box=`<div class="group"><div class="list"><div class="field"><label for="b-falta">Falta</label><input id="b-falta" placeholder="pilar, análogo, bandas…"></div></div><div class="note">A clínica vê o aviso na hora.</div></div><div class="btns"><button class="btn red" data-act="falta" data-id="${j.id}">Avisar a clínica</button></div>`;
+  if(L&&state.box==="falta"){const own={"Dr. Gonçalo Jesus":"Dr. Gonçalo","Dra. Catarina Mar Couto":"Dra. Catarina"},pre=[...(j.cl==="Aveiro"||j.cl==="Faíscas"?[j.cl]:["Aveiro","Faíscas"]),...(own[j.por]?[own[j.por]]:[])];
+    const op=[["Aveiro","Receção Aveiro"],["Faíscas","Receção Faíscas"],["Dr. Gonçalo","Dr. Gonçalo"],["Dra. Catarina","Dra. Catarina"]];
+    box=`<div class="group"><div class="list"><div class="field"><label for="b-falta">Falta</label><input id="b-falta" placeholder="pilar, análogo, bandas…"></div></div></div>
+    <div class="group"><div class="note" style="margin:0 0 8px">Avisar quem? Já está marcado quem fez o pedido${j.por?" ("+esc(j.por)+")":""}. Junte o Dr. Gonçalo se o componente tiver de passar por ele.</div><div class="chips" id="b-fpara" style="justify-content:flex-start">${op.map(([v,l])=>`<button class="chip" data-fp="${v}" aria-pressed="${pre.includes(v)}">${l}</button>`).join("")}</div></div>
+    <div class="group"><div class="seg" id="b-fpri"><button data-fpri="u" aria-pressed="true">Urgente</button><button data-fpri="h" aria-pressed="false">Importante</button></div><div class="note">Aparece logo nos avisos e no telemóvel de quem escolher.</div></div>
+    <div class="btns"><button class="btn red" data-act="falta" data-id="${j.id}">Avisar</button></div>`;}
   if(L&&state.box==="data")box=`<div class="group"><div class="list"><div class="field"><label for="b-data">Nova data</label><input type="date" id="b-data" min="${TODAY}" value="${p?add(p.d,1):TODAY}"></div></div></div><div class="btns"><button class="btn fill" data-act="propor" data-id="${j.id}">Enviar proposta</button></div>`;
   if(!L&&state.box==="alterar")box=`<div class="group"><div class="list"><div class="field"><label for="b-ad">Nova data</label><input type="date" id="b-ad" value="${p?p.d:TODAY}"></div><div class="field"><label for="b-ah">Hora</label><input type="time" id="b-ah" value="${p?p.h:""}"></div></div><div class="note">O Milner é avisado da alteração.</div></div><div class="btns"><button class="btn fill" data-act="alterar" data-id="${j.id}">Guardar nova data</button><button class="btn red" data-act="desmarcou" data-id="${j.id}">Paciente desmarcou</button></div>`;
   const estadoLab=L&&["aceite","novo"].includes(j.st)?group(j.pedeEstado?"Responder ao ponto de situação":"Estado no laboratório",`<div class="field col"><div class="chips">${Object.entries(LABEST).filter(([k])=>!["falta_componente","pronto"].includes(k)).map(([k,v])=>`<button class="chip" data-labst="${k}" data-id="${j.id}" aria-pressed="${j.labSt===k}">${v}</button>`).join("")}</div></div>`):"";
@@ -1063,7 +1068,7 @@ document.addEventListener("click",ev=>{
       case "recusardata": log(j,"Clínica mantém a data"); j.novaData=null; j.st="novo"; break;
       case "alterar": {const x=$("#b-ad").value,h=$("#b-ah").value; if(!x) return; if(p){log(j,`Consulta alterada: ${fmtS(p.d)}${p.h?" "+p.h:""} → ${fmtS(x)}${h?" "+h:""}`);p.d=x;p.h=h;p.c=false} else {j.dt.push({d:x,h,f:"entrega",x:"",c:false,o:false});log(j,`Nova data: ${fmtS(x)}`)} if(j.st==="sem_data")j.st="aceite"; state.box=null; toast("Data alterada. O Milner foi avisado."); break;}
       case "desmarcou": if(p){p.o=true;log(j,`Paciente desmarcou (${fmtS(p.d)})`)} state.box=null; break;
-      case "falta": {const x=$("#b-falta").value.trim(); if(!x) return; j.falta=x; j.labSt="falta_componente"; state.box=null; log(j,`Falta componente: ${x}`); j.ms.push({de:"lab",txt:`Falta componente: ${x}`,q:nowS()}); toast("Clínica avisada"); break;}
+      case "falta": {const x=$("#b-falta").value.trim(); if(!x) return; const fp=[...document.querySelectorAll("[data-fp][aria-pressed=true]")].map(b=>b.dataset.fp); if(!fp.length){toast("Escolha a quem avisar");return} j.faltaPara=fp; j.faltaPri=(document.querySelector("[data-fpri][aria-pressed=true]")||{dataset:{fpri:"u"}}).dataset.fpri; j.falta=x; j.labSt="falta_componente"; state.box=null; log(j,`Falta componente: ${x}`); j.ms.push({de:"lab",txt:`Falta componente: ${x}`,q:nowS()}); toast("Aviso enviado"); break;}
       case "recebido": log(j,`Componente recebido (${j.falta})`); j.falta=null; j.labSt="em_curso"; break;
       case "pronto": (ETAPAS[j.tp]||ETAPAS.outro).forEach((c,i)=>{if(!j.etp[i]?.feito) j.etp[i]={...(j.etp[i]||{}),feito:TODAY}}); j.st="pronto"; j.labSt="pronto"; j.pedeEstado=null; log(j,"Pronto na gaveta"); toast("Marcado como pronto"); break;
       case "adiar": j.labSt="adiado"; log(j,"Milner: não vai estar a tempo"); j.ms.push({de:"lab",txt:"Não vai estar pronto a tempo. Temos de adiar.",q:nowS()}); toast("Clínica avisada"); break;
@@ -1189,6 +1194,8 @@ render();
 
 ;['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});
+
+document.addEventListener("click",e=>{const c=e.target.closest&&e.target.closest("[data-fp]");if(c){e.stopPropagation();c.setAttribute("aria-pressed",c.getAttribute("aria-pressed")==="true"?"false":"true");return}const p=e.target.closest&&e.target.closest("[data-fpri]");if(p){e.stopPropagation();p.parentNode.querySelectorAll("[data-fpri]").forEach(b=>b.setAttribute("aria-pressed",String(b===p)))}},true);
 </script>
 
 </body></html>
