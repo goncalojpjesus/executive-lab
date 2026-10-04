@@ -4,6 +4,11 @@
 <style>
 /* como uma app instalada: sem zoom, sem a página a esticar */
 html,body{overscroll-behavior:none;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
+body{padding-top:env(safe-area-inset-top,0px)}
+/* barra de estado do iPhone (hora, bateria): o conteúdo desvanece por baixo, como nas apps da Apple */
+body::before{content:'';position:fixed;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 12px);background:linear-gradient(to bottom,var(--bg) 0,var(--bg) calc(100% - 12px),transparent);z-index:1000;pointer-events:none}
+@supports not (height:env(safe-area-inset-top)){body::before{display:none}}
+
 
 /* Layout: entrada por código → título grande + separadores (Trabalhos | Calendário | Histórico); listas agrupadas iOS; pedido, ficha e ajustes em folhas */
 :root{
