@@ -487,6 +487,7 @@ function etapas(j){
 function estado(j){
   if(j.st==="entregue") return {l:"Entregue",t:"done",ic:"ok"};
   if(j.st==="arquivado") return {l:"Arquivado",t:"done",ic:"done"};
+  if(j.st==="continuado") return {l:"Continuado",t:"done",ic:"done"};
   if(j.st==="sem_data") return {l:"Sem data",t:"",ic:"cal"};
   if(j.st==="novo") return {l:"Por aceitar",t:"new",ic:"new"};
   if(j.st==="nova-data") return {l:"Nova data proposta",t:"warn",ic:"warn"};
@@ -669,7 +670,7 @@ function render(){
   $("#app").innerHTML=`<main class="wrap">
     <div class="bar">
       <button class="who" data-act="ajustes" aria-label="Ajustes">${lab()?"":state.clinic?av(state.clinic,true):""}<span><b>${esc(state.user.n)}</b>${lab()?" · Laboratório":state.clinic?" · "+esc(state.clinic):""}</span></button>
-      <span style="display:flex;gap:8px;align-items:center"><button class="iconbtn" data-act="ajustes" aria-label="Ajustes">${ico("gear")}</button>${lab()?"":`<button class="plus" data-act="novo" aria-label="Novo pedido">${ico("plus")}</button>`}</span>
+      <span style="display:flex;gap:8px;align-items:center"><button class="iconbtn" data-act="ajustes" aria-label="Ajustes">${ico("gear")}</button>${lab()?`<button class="btn fill" data-act="escrever" style="padding:7px 14px;font-size:.88rem;min-height:0;width:auto">Escrever à clínica</button>`:`<button class="plus" data-act="novo" aria-label="Novo pedido">${ico("plus")}</button>`}</span>
     </div>
     <h1>${lab()?"Laboratório":"Executive Lab"}</h1>
     <p class="sub">${lab()?"Trabalhos da Jesus Mar Couto":"Pedidos ao Executive Dental Lab"} </p>
@@ -692,9 +693,10 @@ function perguntaRow(j,e){
 }
 const p_=j=>{const p=proxima(j);return p?rel(p.d).toLowerCase()+(p.h?" "+p.h:""):"sem data"};
 
-function consultasDe(d){const L=[];for(const j of JOBS){if(!visivel(j)||j.ex&&false||["arquivado"].includes(j.st))continue;for(const x of ativos(j))if(x.d===d)L.push({j,x})}return L.sort((a,b)=>(a.x.h||"99").localeCompare(b.x.h||"99"))}
+function consultasDe(d){const L=[];for(const j of JOBS){if(!visivel(j)||j.ex&&false||["arquivado","continuado"].includes(j.st))continue;for(const x of ativos(j))if(x.d===d)L.push({j,x})}return L.sort((a,b)=>(a.x.h||"99").localeCompare(b.x.h||"99"))}
 function prontoTag(j,x){
   if(j.st==="entregue") return `<span class="tag">${ico("ok")}Entregue</span>`;
+  if(j.st==="continuado") return `<span class="tag">Continuado</span>`;
   if(j.st==="pronto"||x.c) return `<span class="tag tag-ok">${ico("ok")}${j.st==="pronto"?"Pronto":"Confirmado"}</span>`;
   if(j.falta) return `<span class="tag tag-crit">${ico("crit")}Falta componente</span>`;
   if(j.pedeConf) return `<span class="tag tag-new">${ico("new")}Pedido ao Milner</span>`;
@@ -800,7 +802,10 @@ function renderSheet(){
     if(!j.pedeEstado) btn.push(`<button class="btn" data-act="pedirestado" data-id="${j.id}">Pedir ponto de situação</button>`);
     else btn.push(`<div class="note" style="text-align:center;padding:0">Ponto de situação pedido</div>`);
     btn.push(`<button class="btn" data-act="box" data-v="alterar">Alterar data da consulta</button>`);
-    if(p&&diff(TODAY,p.d)<=0) btn.push(`<button class="btn" data-act="entregue" data-id="${j.id}">Marcar como entregue</button>`);
+    if((p&&diff(TODAY,p.d)<=0)||j.st==="pronto") btn.push(`<button class="btn green" data-act="entregue" data-id="${j.id}">Concluído · entregue ao paciente</button>`);
+    btn.push(`<button class="btn" data-act="continuar" data-id="${j.id}">Continuar este trabalho…</button>`);
+  } else if(!L&&["entregue","arquivado"].includes(j.st)){
+    btn.push(`<button class="btn" data-act="continuar" data-id="${j.id}">Continuar este trabalho…</button>`);
   }
   let box="";
   if(L&&state.box==="falta"){const own={"Dr. Gonçalo Jesus":"Dr. Gonçalo","Dra. Catarina Mar Couto":"Dra. Catarina"},pre=[...(j.cl==="Aveiro"||j.cl==="Faíscas"?[j.cl]:["Aveiro","Faíscas"]),...(own[j.por]?[own[j.por]]:[])];
@@ -818,7 +823,7 @@ function renderSheet(){
     <div class="sh-h"><button class="l" data-close>Fechar</button><h2>${esc(j.id)}</h2><span></span></div>
     <div class="sh-b">
       <div class="hero"><h3>${esc(nomeC(j))}</h3>${imedLinha(j)}<p>${av(j.cl,true)}${esc(tipoTxt(j))} · ${esc(j.cl)}</p>${tag(e)}</div>
-      ${group("Pedido",row("Clínica",esc(j.cl))+row("Médico",esc(j.med||"—"))+row("Trabalho",esc(tipoTxt(j)))+row("Dentes",esc(j.den||"—"))+row("Cor",esc(j.cor||"—"))+row("Fotos",j.fotos.length?`${j.fotos.length} anexadas`:j.fot?`${j.fot} enviadas no WhatsApp`:"—")+row("Pedido",`${esc(j.por||"—")} · ${fmtY(j.em)}`))}
+      ${group("Pedido",row("Clínica",esc(j.cl))+row("Médico",esc(j.med||"—"))+row("Trabalho",esc(tipoTxt(j)))+row("Dentes",esc(j.den||"—"))+row("Cor",esc(j.cor||"—"))+row("Fotos",j.fotos.length?`${j.fotos.length} anexadas`:j.fot?`${j.fot} enviadas no WhatsApp`:"—")+row("Pedido",`${esc(j.por||"—")} · ${fmtY(j.em)}`)+(j.seg?`<button class="rowi" data-open="${esc(j.seg)}" style="width:100%;border:0;background:none;text-align:left;cursor:pointer"><span class="main">Seguimento de</span><span style="color:var(--blue,#007AFF)">${esc(j.seg)} ›</span></button>`:"")+(j.segPara?`<button class="rowi" data-open="${esc(j.segPara)}" style="width:100%;border:0;background:none;text-align:left;cursor:pointer"><span class="main">Continuado em</span><span style="color:var(--blue,#007AFF)">${esc(j.segPara)} ›</span></button>`:""))}
       ${j.obs?group("Observações",`<div class="rowi wrapt"><span class="main"><div class="s" style="color:var(--fg);font-size:.92rem">${esc(j.obs)}</div></span></div>`):""}
       ${group("Fotos",`<div class="rowi"><div class="photos big">${j.fotos.map((f,i)=>`<img src="${fotoSrc(f)}" data-fid="${esc(f)}" alt="Foto ${i+1}" data-zoom>`).join("")}${j.fotos.length?"":`<span class="muted" style="font-size:.86rem">${j.fot?`${j.fot} enviadas no WhatsApp (não vieram na exportação)`:"Sem fotos"}</span>`}</div></div><div class="fotozona" style="padding-top:4px"><label class="addph">${ico("cam")} Tirar ou anexar foto<input type="file" id="j-ph" accept="image/*" multiple></label></div>`,j.fotos.length||"")}
       ${j.falta?group("Falta componente",`<div class="rowi"><span class="aic tag-crit">${ico("crit")}</span><span class="main">${esc(j.falta)}</span></div>`):""}
@@ -827,13 +832,28 @@ function renderSheet(){
       ${estadoLab}
       ${et.length&&aberto(j)?group("Etapas no laboratório",et.map(x=>etapaRow(j,x,L)).join(""),"dias úteis"):""}
       ${group("Mensagens",`<div class="msgs">${j.ms.length?j.ms.map(m=>`<div class="msg ${m.de===me?"me":""}"><small>${m.de==="lab"?"Milner":"Clínica"} · ${esc(m.q.length>10?fmtS(m.q)+" "+m.q.slice(11,16):m.q)}</small>${esc(m.txt)}</div>`).join(""):`<span class="muted" style="text-align:center">Sem mensagens</span>`}</div>
-        <form class="compose" id="msg"><input id="msg-in" placeholder="Escrever ${L?"à clínica":"ao Milner"}" aria-label="Mensagem" autocomplete="off"><button type="submit">Enviar</button></form>`)}
+        <form class="compose" id="msg"><input id="msg-in" placeholder="Escrever ${L?"à clínica":"ao Milner"}" aria-label="Mensagem" autocomplete="off"><button type="submit">Enviar</button></form>${L?`<div class="note" style="margin:8px 0 6px">Aparece nas notificações (JMC Avisos) de:</div><div class="chips" id="m-para" style="justify-content:flex-start">${paraOp().map(([v,l])=>`<button type="button" class="chip" data-mp="${v}" aria-pressed="${paraPre(j).includes(v)}">${l}</button>`).join("")}</div>`:""}`)}
       ${group("Histórico",`<div class="hist">${j.hi.slice().reverse().map(h=>`<div class="rowi"><span class="q">${esc(fmtS(h.q))}${h.q.length>10?" "+h.q.slice(11,16):""}</span><span class="ht">${esc(h.t)}</span></div>`).join("")}</div>`,j.imp?"importado do WhatsApp":"")}
     </div></div>`;
   const jph=$("#j-ph"); if(jph) jph.onchange=async ev=>{const n=ev.target.files.length,urls=[];for(const f of ev.target.files) urls.push(await shrink(f)); toast("A enviar fotos…"); await enviarFotos(j,urls); log(j,`${state.user.n} acrescentou ${n} foto${n>1?"s":""}`); j.ms.push({de:L?"lab":"clinica",txt:`📷 ${n} foto${n>1?"s":""} nova${n>1?"s":""}`,q:nowS()}); toast("Fotos guardadas no trabalho"); render()};
-  $("#msg").onsubmit=ev=>{ev.preventDefault();const v=$("#msg-in").value.trim();if(!v)return;j.ms.push({de:me,txt:v,q:nowS()});log(j,`${state.user.n}: mensagem`);render();$("#msg-in")?.focus()};
+  ov.querySelectorAll("[data-mp]").forEach(b=>b.onclick=()=>b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true"));
+  $("#msg").onsubmit=ev=>{ev.preventDefault();const v=$("#msg-in").value.trim();if(!v)return;
+    let para=[]; if(L){para=[...ov.querySelectorAll("[data-mp][aria-pressed=true]")].map(b=>b.dataset.mp); if(!para.length){toast("Escolha para quem é a mensagem");return}}
+    j.ms.push({de:me,txt:v,q:nowS()});log(j,`${state.user.n}: mensagem`);render();$("#msg-in")?.focus();
+    if(L) avisarClinica(para,"n",`${nomeC(j)} · ${tipoTxt(j)}: ${v}`,j.id);};
 }
 
+/* para quem vai o aviso no JMC Avisos (receções e médicos) */
+function paraOp(){return [["Aveiro","Receção Aveiro"],["Faíscas","Receção Faíscas"],["Dr. Gonçalo","Dr. Gonçalo"],["Dra. Catarina","Dra. Catarina"]];}
+function paraPre(j){const own={"Dr. Gonçalo Jesus":"Dr. Gonçalo","Dra. Catarina Mar Couto":"Dra. Catarina","Dr. Gonçalo":"Dr. Gonçalo","Dra. Catarina":"Dra. Catarina"};return [...(j.cl==="Aveiro"||j.cl==="Faíscas"?[j.cl]:["Aveiro","Faíscas"]),...(own[j.por]?[own[j.por]]:[])];}
+function avisarClinica(para,p,texto,id){API("mensagemClinica",SRV.pin,JSON.stringify({para,p,texto,id:id||""})).then(r=>{if(r&&r.ok===false)throw new Error(r.erro||"erro");toast("Enviado para as notificações de "+para.map(x=>x==="Aveiro"||x==="Faíscas"?"Receção "+x:x).join(", "))}).catch(e=>toast("Guardado no trabalho, mas o aviso não seguiu: "+(e.message||e)));}
+/* mensagem à clínica sem trabalho (ex.: encomendar pilares) */
+function escreverClinica(){const ov=$("#ov")||document.body;const d=document.createElement("div");d.className="ovl";d.innerHTML=`<div class="scrim" data-x></div><div class="sheet" role="dialog" aria-modal="true" aria-label="Escrever à clínica"><div class="sh-h"><button class="l" data-x>Fechar</button><h2>Escrever à clínica</h2><span></span></div><div class="sh-b"><div class="group"><div class="list"><div class="field col"><textarea id="ec-t" rows="4" placeholder="Ex.: Encomendar pilares multi-unit para a próxima semana" style="width:100%;border:0;background:none;font:inherit;resize:vertical;outline:none"></textarea></div></div></div><div class="group"><div class="note" style="margin:0 0 8px">Para quem?</div><div class="chips" id="ec-p" style="justify-content:flex-start">${paraOp().map(([v,l])=>`<button type="button" class="chip" data-ep="${v}" aria-pressed="false">${l}</button>`).join("")}</div></div><div class="group"><div class="seg"><button data-epri="n" aria-pressed="true">Normal</button><button data-epri="h" aria-pressed="false">Importante</button><button data-epri="u" aria-pressed="false">Urgente</button></div><div class="note">Aparece logo nas notificações (canto superior) de quem escolher.</div></div><div class="btns"><button class="btn fill" id="ec-go">Enviar</button></div></div></div>`;document.body.appendChild(d);
+  const fecha=()=>d.remove();d.querySelectorAll("[data-x]").forEach(b=>b.onclick=fecha);
+  d.querySelectorAll("[data-ep]").forEach(b=>b.onclick=()=>b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true"));
+  d.querySelectorAll("[data-epri]").forEach(b=>b.onclick=()=>d.querySelectorAll("[data-epri]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false")));
+  d.querySelector("#ec-go").onclick=()=>{const t=d.querySelector("#ec-t").value.trim();if(!t){toast("Escreva a mensagem");return}const para=[...d.querySelectorAll("[data-ep][aria-pressed=true]")].map(b=>b.dataset.ep);if(!para.length){toast("Escolha para quem");return}const p=(d.querySelector("[data-epri][aria-pressed=true]")||{dataset:{epri:"n"}}).dataset.epri;fecha();avisarClinica(para,p,t);};
+  setTimeout(()=>d.querySelector("#ec-t").focus(),60);}
 function etapaRow(j,x,L){
   let sub,acts="";
   if(x.feita&&x.aprovPend){
@@ -878,8 +898,9 @@ function newSheet(ov){
     (gAb?`<div class="tgrid" style="margin-top:10px">${Object.keys(TIPOS).filter(k=>TIPOS[k].g===gAb&&!TIPOS[k].off).map(k=>`<button type="button" class="tbtn" data-tp="${k}" aria-pressed="${F.tp===k}">${esc(TIPOS[k].n)}${LEAD[k]?`<small>habitual ${LEAD[k]} dias</small>`:""}</button>`).join("")}</div>`:"");
   const cfNeeded=t&&t.cf;
   const _prev=sheetPrev(ov); ov.innerHTML=`<div class="scrim" data-close></div><div class="sheet ${_prev.same?"noanim":""}" role="dialog" aria-modal="true" aria-label="Novo pedido">
-    <div class="sh-h"><button type="button" class="l" data-close>Cancelar</button><h2>Novo pedido</h2><button type="button" class="r" data-act="enviar">Enviar</button></div>
+    <div class="sh-h"><button type="button" class="l" data-close>Cancelar</button><h2>${F.seg?"Continuar trabalho":"Novo pedido"}</h2><button type="button" class="r" data-act="enviar">Enviar</button></div>
     <div class="sh-b">
+      ${F.seg?`<div class="group"><div class="note" style="margin:0 0 8px">Seguimento de <b>${esc(F.seg)}</b> · ${esc(F.u)}. O que é preciso agora? O trabalho anterior fica fechado como "Continuado".</div><div class="chips" style="justify-content:flex-start">${["Retificação","Nova prova","Nova coroa / refazer","Outro"].map(m=>`<button type="button" class="chip" data-segm="${m}" aria-pressed="${F.segM===m}">${m}</button>`).join("")}</div></div>`:""}
       <div class="group"><div class="list">
         <div class="field"><label for="f-u">Utente</label><input id="f-u" value="${esc(F.u)}" placeholder="Nome" autocomplete="off" list="imed-list"></div>
         ${confirmaNome(F)}
@@ -935,6 +956,7 @@ function shrink(file){return new Promise(res=>{const r=new FileReader();r.onload
 function enviar(){
   const ov=$("#overlay"); ov._keep&&ov._keep();
   const F=state.form,t=TIPOS[F.tp],err=m=>{$("#f-err").textContent=m;$("#f-err").scrollIntoView({block:"center"})};
+  if(F.seg&&!F.segM) return err("Escolhe o que é preciso: retificação, nova prova, nova coroa…");
   if(!F.u.trim()) return err("Falta o nome do utente.");
   if(!t) return err("Escolhe o tipo de trabalho.");
   const ds=F.datas.filter(x=>x.d);
@@ -947,7 +969,8 @@ function enviar(){
     fot:0,fotos:[],por:state.user.n,em:nowS(),st:"novo",labSt:null,falta:null,imp:false,
     dt:ds.map(x=>({d:x.d,h:x.h,f:x.f,x:x.f==="prova"&&F.tp==="prova"?F.mat:(x.f==="prova"?"Prova":tipoTxtF(F)),c:false,o:false})),hi:[],ms:[],etp:{},pedeConf:null,pedeEstado:null};
   if(F.imed){j.imed=F.imed;j.fi=F.fi;j.iq="ok"} else {j.imed=F.nmNao?null:imedMatch(j.u); j.iq=j.imed?"ok":null}
-  log(j,`Pedido enviado por ${state.user.n} (${j.cl})`);
+  if(F.seg){const o=byId(F.seg); j.seg=F.seg; j.obs=[`${F.segM} (seguimento de ${F.seg})`,j.obs].filter(Boolean).join(" — "); if(o){o.segPara=j.id; if(aberto(o)||o.st==="entregue") o.st="continuado"; log(o,`${F.segM}: continuado em ${j.id} por ${state.user.n}`); SRV.dirty&&SRV.dirty.add&&SRV.dirty.add(o.id);}}
+  log(j,F.seg?`${F.segM} pedido(a) por ${state.user.n} (${j.cl}) · seguimento de ${F.seg}`:`Pedido enviado por ${state.user.n} (${j.cl})`);
   JOBS.push(j); const urls=F.fotos.slice(); state.form=null; state.sheet=null; if(urls.length) enviarFotos(j,urls); toast(`Pedido enviado ao Milner · ${fmt(ds.map(x=>x.d).sort()[0])}`); render();
 }
 const tipoTxtF=F=>`${TIPOS[F.tp].n}${F.mat?" · "+F.mat:""}`;
@@ -1000,6 +1023,8 @@ document.addEventListener("click",ev=>{
   if(!state.user) return;
   const F=state.form, ovk=$("#overlay")._keep;
   const gp=T.closest("[data-grp]"); if(gp){ovk&&ovk();const g=gp.dataset.grp;F.grp=(F.grp||(F.tp&&TIPOS[F.tp].g))===g?"__":g;const ks=Object.keys(TIPOS).filter(k=>TIPOS[k].g===g&&!TIPOS[k].off);if(ks.length===1&&F.grp===g){F.tp=ks[0];F.mat=(TIPOS[F.tp].mats||[""])[0]||""}newSheet($("#overlay"));return}
+  const opn=T.closest("[data-open]"); if(opn&&byId(opn.dataset.open)){state.sheet=opn.dataset.open;state.box=null;render();return}
+  const sgm=T.closest("[data-segm]"); if(sgm&&F){ovk&&ovk();F.segM=sgm.dataset.segm;newSheet($("#overlay"));return}
   const tp=T.closest("[data-tp]"); if(tp){ovk&&ovk();F.tp=tp.dataset.tp;F.mat=(TIPOS[F.tp].mats||[""])[0]||"";newSheet($("#overlay"));return}
   const rph=T.closest("[data-rmph]"); if(rph){ovk&&ovk();F.fotos.splice(+rph.dataset.rmph,1);newSheet($("#overlay"));return}
   const nok=T.closest("[data-nmok]"); if(nok){ovk&&ovk();const c=$("#overlay")._sug()[+nok.dataset.nmok];if(c){F.imed=c.n;F.fi=c.f}newSheet($("#overlay"));return}
@@ -1051,6 +1076,10 @@ document.addEventListener("click",ev=>{
       case "fotoagora": ev.stopPropagation(); F.askFoto=false; newSheet($("#overlay")); $("#f-ph")?.click(); return;
       case "addd": ovk&&ovk(); F.datas.push({d:"",h:"",f:""}); return newSheet($("#overlay"));
       case "ajustes": state.sheet="ajustes"; break;
+      case "escrever": escreverClinica(); return;
+      case "continuar": if(j){ const den=String(j.den||"").split(/\s*,\s*/).filter(Boolean);
+        state.form={...blankForm(),u:j.u,med:j.med||MEDICOS[0],tp:j.tp,mat:j.mat||"",sob:j.sob||"Dente",den,cor:j.cor||"",imed:j.imed||undefined,fi:j.fi||undefined,seg:j.id,segM:""};
+        state.sheet="novo"; } break;
       case "sair": gravar(); state.user=null; SRV.pin=null; JOBS=[]; state.sheet=null; state.view="trabalhos"; state.filter=null; break;
       case "notif": (NOTIF.on()?desligarNotif():ativarNotif()).then(()=>render()); break;
       case "biooff": BIO.del(); store.del("xl-bio-nao"); toast("Entrada com rosto desligada neste aparelho"); break;
