@@ -984,6 +984,7 @@ function ajustesSheet(ov){
     <div class="sh-h"><span></span><h2>Ajustes</h2><button class="r" data-close>OK</button></div>
     <div class="sh-b">
       ${group("Sessão",`<div class="rowi"><span class="main"><div class="t">${esc(state.user.n)}</div><div class="s">${lab()?"Laboratório":"Clínica"}${state.user.admin?" · supervisor":""}</div></span><button class="link" data-act="sair">Sair</button></div>`)}
+      ${lab()?group("Telemóvel pessoal",`<div class="rowi"><span class="main"><div class="t">Entrar sem código</div><div class="s">${AUTO.get()?"Ativo: a app abre sempre já com a sessão de "+esc(AUTO.get().n):"Só para um telemóvel de uso pessoal"}</div></span><button class="link" data-act="${AUTO.get()?"autooff":"autoon"}">${AUTO.get()?"Desligar":"Ativar"}</button></div>`):""}
       ${BIO.get()?group("Entrada rápida",`<div class="rowi"><span class="main"><div class="t">Rosto ou impressão digital</div><div class="s">Ativo neste aparelho para ${esc(BIO.get().n)}</div></span><button class="link" data-act="biooff">Desligar</button></div>`):""}
       ${group("Notificações",`<div class="rowi"><span class="main"><div class="t">Avisos no telefone</div><div class="s">${esc(NOTIF.estado())}</div></span><button class="link" data-act="notif">${NOTIF.on()?"Desligar":"Ativar"}</button></div>`)}
       ${lab()?"":`${group("Clínica deste dispositivo",`<div class="field col"><div class="seg" role="group">${["Faíscas","Aveiro"].map(c=>`<button data-dev="${c}" aria-pressed="${state.clinic===c}">${c}</button>`).join("")}</div></div>`)}<p class="foot" style="margin:-18px 0 22px">Fica guardada neste aparelho. Os pedidos feitos aqui saem sempre com esta clínica.</p>`}
@@ -1080,8 +1081,10 @@ document.addEventListener("click",ev=>{
       case "continuar": if(j){ const den=String(j.den||"").split(/\s*,\s*/).filter(Boolean);
         state.form={...blankForm(),u:j.u,med:j.med||MEDICOS[0],tp:j.tp,mat:j.mat||"",sob:j.sob||"Dente",den,cor:j.cor||"",imed:j.imed||undefined,fi:j.fi||undefined,seg:j.id,segM:""};
         state.sheet="novo"; } break;
-      case "sair": gravar(); state.user=null; SRV.pin=null; JOBS=[]; state.sheet=null; state.view="trabalhos"; state.filter=null; break;
+      case "sair": gravar(); AUTO.del(); state.user=null; SRV.pin=null; JOBS=[]; state.sheet=null; state.view="trabalhos"; state.filter=null; break;
       case "notif": (NOTIF.on()?desligarNotif():ativarNotif()).then(()=>render()); break;
+      case "autoon": ativarAuto().then(()=>render()); break;
+      case "autooff": AUTO.del(); toast("Entrada sem código desligada neste telemóvel"); break;
       case "biooff": BIO.del(); store.del("xl-bio-nao"); toast("Entrada com rosto desligada neste aparelho"); break;
       case "hmore": state.hmax+=100; break;
       case "addtipo": {const n=$("#nt-n").value.trim(); if(!n) return; const k="u"+Date.now(); TIPOS[k]={n,g:"Outros",mats:$("#nt-m").value.split(",").map(x=>x.trim()).filter(Boolean)}; if(!TIPOS[k].mats.length) delete TIPOS[k].mats; ETAPAS[k]=[{n:"Pronto na gaveta",r:"d",d:1}]; SRV.cfgDirty=true; gravar(); toast(`Tipo "${n}" adicionado`); break;}
@@ -1118,12 +1121,22 @@ let tt;function toast(m){let el=$(".toast");if(!el){el=document.createElement("d
 
 /* ======================= App instalada: rosto/impressão digital, cópia local, atualizações ======================= */
 const BIO={get(){try{return JSON.parse(localStorage.getItem("xl-bio")||"null")}catch(e){return null}},set(v){try{localStorage.setItem("xl-bio",JSON.stringify(v))}catch(e){}},del(){try{localStorage.removeItem("xl-bio");localStorage.removeItem("xl-dados")}catch(e){}}};
+const AUTO={get(){try{return JSON.parse(localStorage.getItem("xl-auto")||"null")}catch(e){return null}},set(v){try{localStorage.setItem("xl-auto",JSON.stringify(v))}catch(e){}},del(){try{localStorage.removeItem("xl-auto")}catch(e){}}};
 const b64=a=>btoa(String.fromCharCode(...new Uint8Array(a))), unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0)), rnd=n=>crypto.getRandomValues(new Uint8Array(n));
 async function bioDisponivel(){try{return !!(window.PublicKeyCredential&&navigator.credentials&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable())}catch(e){return false}}
-function guardarLocal(){if(!BIO.get()||!state.user)return;try{localStorage.setItem("xl-dados",JSON.stringify({user:state.user,dados:{rev:SRV.rev,trabalhos:JOBS,cfg:cfgAtual()}}))}catch(e){}}
+function guardarLocal(){if(!(BIO.get()||AUTO.get())||!state.user)return;try{localStorage.setItem("xl-dados",JSON.stringify({user:state.user,dados:{rev:SRV.rev,trabalhos:JOBS,cfg:cfgAtual()}}))}catch(e){}}
 document.addEventListener("visibilitychange",()=>{if(document.hidden)guardarLocal()});
 async function oferecerBio(cred){
-  if(BIO.get()||store.get("xl-bio-nao")||!state.user||!(await bioDisponivel()))return;
+  if(lab()&&state.user&&!AUTO.get()&&!store.get("xl-auto-nao")){
+    const ov=document.createElement("div");ov.className="biooffer";
+    ov.innerHTML=`<div class="bio-c"><b>Este telemóvel é só seu?</b><p>Se sim, a app passa a abrir sempre sem pedir o código.</p><div class="chips"><button class="pill" data-au="sim">Sim, entrar sem código</button><button class="pill ghost" data-au="nao">Não</button></div></div>`;
+    document.body.append(ov);
+    ov.onclick=async ev=>{const b=ev.target.closest("[data-au]");if(!b)return;ov.remove();
+      if(b.dataset.au==="nao"){store.set("xl-auto-nao","1");return}
+      await ativarAuto();if(state.view==="ajustes")render()};
+    return;
+  }
+  if(AUTO.get()||BIO.get()||store.get("xl-bio-nao")||!state.user||!(await bioDisponivel()))return;
   const ov=document.createElement("div");ov.className="biooffer";
   ov.innerHTML=`<div class="bio-c"><b>Entrar com o rosto ou a impressão digital?</b><p>Neste aparelho, da próxima vez abres a app sem código.</p><div class="chips"><button class="pill" data-bio="sim">Ativar</button><button class="pill ghost" data-bio="nao">Agora não</button></div></div>`;
   document.body.append(ov);
@@ -1139,6 +1152,29 @@ async function oferecerBio(cred){
   };
 }
 function sairJa(){state.user=null;SRV.pin=null;JOBS=[];state.sheet=null;state.view="trabalhos";state.filter=null;render()}
+/* telemóvel pessoal (ex. Milner): entra sozinho, sem código, com a chave deste aparelho */
+async function entrarAuto(){
+  const a=AUTO.get();if(!a||state.busy||state.user)return;
+  let cache=null;try{cache=JSON.parse(localStorage.getItem("xl-dados")||"null")}catch(e){}
+  if(cache&&cache.dados&&cache.user){
+    entrar(a.token,{ok:true,user:cache.user,dados:cache.dados},true);
+    API("login",a.token).then(r=>{
+      if(r.ok){if(!SRV.dirty.size&&!SRV.saving){const ab=state.sheet;carregar(r.dados);state.user={...r.user};state.sheet=ab;render();guardarLocal()}}
+      else{AUTO.del();sairJa();state.perr="Este aparelho tem de voltar a entrar com o código.";renderLogin()}
+    }).catch(()=>estadoLigacao("Sem ligação. A mostrar a última cópia.",true));
+    return;
+  }
+  state.busy=true;pinVer();
+  let r;try{r=await API("login",a.token)}catch(e){r={ok:false,erro:"Sem ligação ao servidor. Tenta outra vez."}}
+  state.busy=false;
+  if(!r.ok){if(!/ligação/.test(r.erro||""))AUTO.del();state.perr=r.erro||"Erro";return renderLogin()}
+  entrar(a.token,r,true);
+}
+async function ativarAuto(){
+  try{const r=await API("registarAparelho",SRV.pin,("Entrada automática · "+((navigator.userAgent.match(/\(([^)]+)\)/)||[])[1]||"aparelho")).slice(0,60));
+    if(!r.ok)throw new Error(r.erro||"Erro");AUTO.set({token:r.token,n:state.user.n});guardarLocal();toast("Pronto. Neste telemóvel a app abre sempre sem código.")}
+  catch(e){toast("Não foi possível ativar: "+(e.message||e))}
+}
 async function entrarBio(){
   const b=BIO.get();if(!b||state.busy)return;
   try{await navigator.credentials.get({publicKey:{challenge:rnd(32),allowCredentials:[{type:"public-key",id:unb64(b.id)}],userVerification:"required",timeout:60000}})}
@@ -1218,6 +1254,7 @@ async function verNotifAoEntrar(){
 if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data==="novidades")atualizar()});
 
 render();
+if(AUTO.get())entrarAuto();
 
 })();
 
