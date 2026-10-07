@@ -250,6 +250,52 @@ button.rowi:active{background:var(--fill)}
 .msgs{display:grid;gap:6px;padding:12px}
 .msg{max-width:82%;padding:8px 12px;border-radius:18px;background:var(--fill);justify-self:start;overflow-wrap:anywhere}
 .msg.me{justify-self:end;background:var(--blue);color:#fff}
+.msg.old{opacity:.5;filter:saturate(.35)}
+#pesq{position:fixed;inset:0;z-index:60;display:flex;justify-content:center;align-items:flex-start;padding:max(12px,env(safe-area-inset-top,0px)) 12px 12px}
+.pq-scrim{position:absolute;inset:0;background:rgba(0,0,0,.28)}
+.pq-box{position:relative;width:min(620px,100%);max-height:min(80vh,720px);background:var(--bg);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;margin-top:6vh;animation:up .18s cubic-bezier(.2,.8,.2,1)}
+.pq-in{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--sep);background:var(--card)}
+.pq-in svg{width:20px;height:20px;color:var(--muted);flex:none}
+.pq-in input{flex:1;min-width:0;border:0;background:none;font-size:1.05rem;outline:none;color:var(--fg)}
+.pq-in input::-webkit-search-cancel-button{display:none}
+.pq-in button{border:0;background:none;color:var(--blue);font-size:.95rem;cursor:pointer}
+.pq-res{overflow-y:auto;padding:10px 12px 14px;display:grid;gap:6px}
+.pq-h{font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:0 4px}
+.pq-none{color:var(--muted);text-align:center;padding:28px 8px}
+@media (max-width:699px){.pq-box{margin-top:0;max-height:100%}}
+/* computador: lista em colunas; ficha do trabalho em painel à direita com a conversa ao lado */
+@media (min-width:1100px){
+  main.wrap{max-width:1240px}
+  main.v-trabalhos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:20px;align-content:start}
+  main.v-trabalhos>*:not(.group){grid-column:1/-1}
+  body:has(.sheet.jobpane) main.wrap{max-width:none;width:max(36vw,440px);margin:0;padding-left:28px}
+  body:has(.sheet.jobpane) main.v-trabalhos{grid-template-columns:minmax(0,1fr)}
+  .scrim:has(+.sheet.jobpane){display:none}
+  .sheet.jobpane{left:auto;right:0;top:0;bottom:0;transform:none;width:calc(100vw - max(36vw,440px) - 44px);max-height:none;height:100%;border-radius:0;box-shadow:-1px 0 0 var(--sep),-10px 0 30px rgba(0,0,0,.07);animation:none}
+  .sheet.jobpane .sh-b{flex:1;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;padding:4px 24px 0}
+  .sheet.jobpane .jcol{overflow-y:auto;min-height:0;padding-bottom:28px}
+  .sheet.jobpane .jcol.b{display:flex;flex-direction:column}
+  .sheet.jobpane .jcol.b>.group:first-child{flex:1;display:flex;flex-direction:column;min-height:60%}
+  .sheet.jobpane .jcol.b>.group:first-child>.list{flex:1;display:flex;flex-direction:column}
+  .sheet.jobpane .jcol.b .msgs{flex:1;align-content:end}
+  .sheet.jobpane .hero{text-align:left;padding-top:8px}
+  .sheet.jobpane .hero p{justify-content:flex-start}
+  .sheet.jobpane .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sheet.jobpane .btns .btn.fill{grid-column:1/-1}
+}
+.fsep{display:flex;align-items:center;gap:8px;font-size:.72rem;font-weight:600;color:var(--fg);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 2px}
+.fsep::before,.fsep::after{content:"";flex:1;height:1px;background:var(--sep)}
+.fsep.old{color:var(--muted)}
+.pedc{padding:12px 16px;display:grid;gap:8px}
+.pc-tipo{font-weight:600;font-size:1.02rem;line-height:1.3}
+.pc-ks{display:flex;flex-wrap:wrap;gap:6px}
+.pc-k{background:var(--fill);border-radius:8px;padding:3px 9px;font-size:.84rem;color:var(--muted)}
+.pc-k b{color:var(--fg);font-weight:600}
+.pc-obs{font-size:.92rem;line-height:1.4;white-space:pre-line}
+.pc-meta{font-size:.78rem;color:var(--muted)}
+.pc-add{justify-self:start;display:inline-flex;align-items:center;gap:6px;font-size:.84rem;color:var(--blue);cursor:pointer}
+.pc-add svg{width:16px;height:16px}
+.pc-add input{display:none}
 .msg small{display:block;font-size:.68rem;opacity:.75}
 .compose{display:flex;gap:8px;align-items:center;padding:8px 8px 8px 16px;border-top:1px solid var(--sep)}
 .compose input{flex:1;min-width:0;border:0;background:none;outline:none;padding:6px 0}
@@ -545,6 +591,7 @@ function visivel(j){ if(state.cfilter==="todas") return true; return j.cl===stat
 
 /* ======================= Ícones ======================= */
 const I={
+  lupa:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>',
   face:'<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M9 9v1.5M15 9v1.5M12 9v4h-1M9 16c1.7 1.3 4.3 1.3 6 0"/>',
   crit:'<path d="M12 3.5 2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2v.1"/>',
   warn:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
@@ -667,10 +714,10 @@ function render(){
   } else if(state.view==="calendario") body+=calHtml();
   else body+=histHtml();
 
-  $("#app").innerHTML=`<main class="wrap">
+  $("#app").innerHTML=`<main class="wrap v-${state.view}">
     <div class="bar">
       <button class="who" data-act="ajustes" aria-label="Ajustes">${lab()?"":state.clinic?av(state.clinic,true):""}<span><b>${esc(state.user.n)}</b>${lab()?" · Laboratório":state.clinic?" · "+esc(state.clinic):""}</span></button>
-      <span style="display:flex;gap:8px;align-items:center"><button class="iconbtn" data-act="ajustes" aria-label="Ajustes">${ico("gear")}</button>${lab()?`<button class="btn fill" data-act="escrever" style="padding:7px 14px;font-size:.88rem;min-height:0;width:auto">Escrever à clínica</button>`:`<button class="plus" data-act="novo" aria-label="Novo pedido">${ico("plus")}</button>`}</span>
+      <span style="display:flex;gap:8px;align-items:center"><button class="iconbtn" data-act="pesquisa" aria-label="Pesquisar paciente" title="Pesquisar paciente">${ico("lupa")}</button><button class="iconbtn" data-act="ajustes" aria-label="Ajustes">${ico("gear")}</button>${lab()?`<button class="btn fill" data-act="escrever" style="padding:7px 14px;font-size:.88rem;min-height:0;width:auto">Escrever à clínica</button>`:""}<button class="plus" data-act="novo" aria-label="${lab()?"Adicionar trabalho":"Novo pedido"}" title="${lab()?"Adicionar trabalho":"Novo pedido"}">${ico("plus")}</button></span>
     </div>
     <h1>${lab()?"Laboratório":"Executive Lab"}</h1>
     <p class="sub">${lab()?"Trabalhos da Jesus Mar Couto":"Pedidos ao Executive Dental Lab"} </p>
@@ -819,22 +866,22 @@ function renderSheet(){
   const estadoLab=L&&["aceite","novo"].includes(j.st)?group(j.pedeEstado?"Responder ao ponto de situação":"Estado no laboratório",`<div class="field col"><div class="chips">${Object.entries(LABEST).filter(([k])=>!["falta_componente","pronto"].includes(k)).map(([k,v])=>`<button class="chip" data-labst="${k}" data-id="${j.id}" aria-pressed="${j.labSt===k}">${v}</button>`).join("")}</div></div>`):"";
   const datas=ativos(j).length||j.dt.length?group("Consultas",j.dt.slice().sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h)).map(x=>`<div class="rowi"><span class="main"><div class="t" style="${x.o?"text-decoration:line-through;color:var(--muted)":""}">${x.f==="prova"?"Prova":x.f==="retificacao"?"Retificação":"Entrega"} · ${fmt(x.d)}${x.h?" às "+x.h:""}</div>${x.x?`<div class="s">${esc(x.x)}</div>`:""}</span>${x.o?`<span class="tag">Desmarcada</span>`:x.c?`<span class="tag tag-ok">${ico("ok")}Confirmado</span>`:x.d<TODAY?`<span class="tag">Passou</span>`:""}</div>`).join("")):"";
   const et=etapas(j);
-  const _prev=sheetPrev(ov); ov.innerHTML=`<div class="scrim" data-close></div><div class="sheet ${_prev.same?"noanim":""}" role="dialog" aria-modal="true" aria-label="${esc(j.u)}">
+  const _prev=sheetPrev(ov); ov.innerHTML=`<div class="scrim" data-close></div><div class="sheet jobpane ${_prev.same?"noanim":""}" role="dialog" aria-modal="true" aria-label="${esc(j.u)}">
     <div class="sh-h"><button class="l" data-close>Fechar</button><h2>${esc(j.id)}</h2><span></span></div>
-    <div class="sh-b">
-      <div class="hero"><h3>${esc(nomeC(j))}</h3>${imedLinha(j)}<p>${av(j.cl,true)}${esc(tipoTxt(j))} · ${esc(j.cl)}</p>${tag(e)}</div>
-      ${group("Pedido",row("Clínica",esc(j.cl))+row("Médico",esc(j.med||"—"))+row("Trabalho",esc(tipoTxt(j)))+row("Dentes",esc(j.den||"—"))+row("Cor",esc(j.cor||"—"))+row("Fotos",j.fotos.length?`${j.fotos.length} anexadas`:j.fot?`${j.fot} enviadas no WhatsApp`:"—")+row("Pedido",`${esc(j.por||"—")} · ${fmtY(j.em)}`)+(j.seg?`<button class="rowi" data-open="${esc(j.seg)}" style="width:100%;border:0;background:none;text-align:left;cursor:pointer"><span class="main">Seguimento de</span><span style="color:var(--blue,#007AFF)">${esc(j.seg)} ›</span></button>`:"")+(j.segPara?`<button class="rowi" data-open="${esc(j.segPara)}" style="width:100%;border:0;background:none;text-align:left;cursor:pointer"><span class="main">Continuado em</span><span style="color:var(--blue,#007AFF)">${esc(j.segPara)} ›</span></button>`:""))}
-      ${j.obs?group("Observações",`<div class="rowi wrapt"><span class="main"><div class="s" style="color:var(--fg);font-size:.92rem">${esc(j.obs)}</div></span></div>`):""}
-      ${group("Fotos",`<div class="rowi"><div class="photos big">${j.fotos.map((f,i)=>`<img src="${fotoSrc(f)}" data-fid="${esc(f)}" alt="Foto ${i+1}" data-zoom>`).join("")}${j.fotos.length?"":`<span class="muted" style="font-size:.86rem">${j.fot?`${j.fot} enviadas no WhatsApp (não vieram na exportação)`:"Sem fotos"}</span>`}</div></div><div class="fotozona" style="padding-top:4px"><label class="addph">${ico("cam")} Tirar ou anexar foto<input type="file" id="j-ph" accept="image/*" multiple></label></div>`,j.fotos.length||"")}
+    <div class="sh-b"><div class="jcol a">
+      <div class="hero"><h3>${esc(nomeC(j))}</h3>${imedLinha(j)}<p>${av(j.cl,true)}${esc(j.cl)}${j.med?" · "+esc(j.med):""}</p>${tag(e)}</div>
+      ${group("Pedido",`<div class="pedc"><div class="pc-tipo">${esc(tipoTxt(j))}</div>${[j.den?`<span class="pc-k">Dentes <b>${esc(j.den)}</b></span>`:"",j.cor?`<span class="pc-k">Cor <b>${esc(j.cor)}</b></span>`:"",!j.fotos.length&&j.fot?`<span class="pc-k">${j.fot} fotos no WhatsApp</span>`:""].filter(Boolean).join("")?`<div class="pc-ks">${[j.den?`<span class="pc-k">Dentes <b>${esc(j.den)}</b></span>`:"",j.cor?`<span class="pc-k">Cor <b>${esc(j.cor)}</b></span>`:"",!j.fotos.length&&j.fot?`<span class="pc-k">${j.fot} fotos no WhatsApp</span>`:""].join("")}</div>`:""}${j.obs?`<div class="pc-obs">${esc(j.obs)}</div>`:""}<div class="pc-meta">Pedido${j.por?" por "+esc(j.por):""} · ${fmtY(j.em)}</div>${j.fotos.length?"":`<label class="pc-add">${ico("cam")} Anexar foto<input type="file" id="j-ph" accept="image/*" multiple></label>`}</div>`+(j.seg?`<button class="rowi" data-open="${esc(j.seg)}" style="width:100%;border:0;background:none;text-align:left;cursor:pointer"><span class="main">Seguimento de</span><span style="color:var(--blue,#007AFF)">${esc(j.seg)} ›</span></button>`:"")+(j.segPara?`<button class="rowi" data-open="${esc(j.segPara)}" style="width:100%;border:0;background:none;text-align:left;cursor:pointer"><span class="main">Continuado em</span><span style="color:var(--blue,#007AFF)">${esc(j.segPara)} ›</span></button>`:""))}
+      ${j.fotos.length?group("Fotos",`<div class="rowi"><div class="photos big">${j.fotos.map((f,i)=>`<img src="${fotoSrc(f)}" data-fid="${esc(f)}" alt="Foto ${i+1}" data-zoom>`).join("")}</div></div><div class="fotozona" style="padding-top:4px"><label class="addph">${ico("cam")} Tirar ou anexar foto<input type="file" id="j-ph" accept="image/*" multiple></label></div>`,j.fotos.length):""}
       ${j.falta?group("Falta componente",`<div class="rowi"><span class="aic tag-crit">${ico("crit")}</span><span class="main">${esc(j.falta)}</span></div>`):""}
       ${datas}
       ${btn.length?`<div class="btns">${btn.join("")}</div>`:""}${box}
       ${estadoLab}
       ${et.length&&aberto(j)?group("Etapas no laboratório",et.map(x=>etapaRow(j,x,L)).join(""),"dias úteis"):""}
-      ${group("Mensagens",`<div class="msgs">${j.ms.length?j.ms.map(m=>`<div class="msg ${m.de===me?"me":""}"><small>${m.de==="lab"?"Milner":"Clínica"} · ${esc(m.q.length>10?fmtS(m.q)+" "+m.q.slice(11,16):m.q)}</small>${esc(m.txt)}</div>`).join(""):`<span class="muted" style="text-align:center">Sem mensagens</span>`}</div>
+      </div><div class="jcol b">
+      ${group("Mensagens",`<div class="msgs">${conversa(j,me)}</div>
         <form class="compose" id="msg"><input id="msg-in" placeholder="Escrever ${L?"à clínica":"ao Milner"}" aria-label="Mensagem" autocomplete="off"><button type="submit">Enviar</button></form>${L?`<div class="note" style="margin:8px 0 6px">Aparece nas notificações (JMC Avisos) de:</div><div class="chips" id="m-para" style="justify-content:flex-start">${paraOp().map(([v,l])=>`<button type="button" class="chip" data-mp="${v}" aria-pressed="${paraPre(j).includes(v)}">${l}</button>`).join("")}</div>`:""}`)}
       ${group("Histórico",`<div class="hist">${j.hi.slice().reverse().map(h=>`<div class="rowi"><span class="q">${esc(fmtS(h.q))}${h.q.length>10?" "+h.q.slice(11,16):""}</span><span class="ht">${esc(h.t)}</span></div>`).join("")}</div>`,j.imp?"importado do WhatsApp":"")}
-    </div></div>`;
+    </div></div></div>`;
   const jph=$("#j-ph"); if(jph) jph.onchange=async ev=>{const n=ev.target.files.length,urls=[];for(const f of ev.target.files) urls.push(await shrink(f)); toast("A enviar fotos…"); await enviarFotos(j,urls); log(j,`${state.user.n} acrescentou ${n} foto${n>1?"s":""}`); j.ms.push({de:L?"lab":"clinica",txt:`📷 ${n} foto${n>1?"s":""} nova${n>1?"s":""}`,q:nowS()}); toast("Fotos guardadas no trabalho"); render()};
   ov.querySelectorAll("[data-mp]").forEach(b=>b.onclick=()=>b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true"));
   $("#msg").onsubmit=ev=>{ev.preventDefault();const v=$("#msg-in").value.trim();if(!v)return;
@@ -843,6 +890,37 @@ function renderSheet(){
     if(L) avisarClinica(para,"n",`${nomeC(j)} · ${tipoTxt(j)}: ${v}`,j.id);};
 }
 
+/* conversa do trabalho: junta as mensagens das fases anteriores (seguimentos), esbatidas, e as da fase atual */
+function fasesDe(j){const L=[j];let x=j,n=0;while(x.seg&&n++<20){const a=JOBS.find(y=>y.id===x.seg);if(!a)break;L.unshift(a);x=a}return L}
+function conversa(j,me){
+  const F=fasesDe(j),msg=(m,old)=>`<div class="msg ${m.de===me?"me":""} ${old?"old":""}"><small>${m.de==="lab"?"Milner":"Clínica"} · ${esc(m.q.length>10?fmtS(m.q)+" "+m.q.slice(11,16):m.q)}</small>${esc(m.txt)}</div>`;
+  let o="";F.forEach((f,i)=>{const cur=f===j,ult=i===F.length-1;
+    const nome=i===0?"Pedido inicial":(f.segM||"Seguimento");
+    if(F.length>1)o+=`<div class="fsep ${cur?"":"old"}"><span>${esc(nome)} · ${esc(fmtS(f.em))}${cur?"":" · fase anterior"}</span></div>`;
+    o+=f.ms.map(m=>msg(m,!cur)).join("");
+    if(F.length>1&&cur&&!f.ms.length)o+=`<span class="muted" style="text-align:center;font-size:.8rem">Ainda sem mensagens nesta fase</span>`;
+    if(!ult&&!cur)return;});
+  return o||`<span class="muted" style="text-align:center">Sem mensagens</span>`;
+}
+/* pesquisa por paciente (lupa no canto superior direito; no computador também Ctrl/⌘+K) */
+const semAc=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function abrirPesquisa(){
+  if(!state.user||document.getElementById("pesq"))return;
+  const ov=document.createElement("div");ov.id="pesq";
+  ov.innerHTML=`<div class="pq-scrim" data-pqx></div><div class="pq-box" role="dialog" aria-label="Pesquisar paciente"><div class="pq-in">${ico("lupa")}<input id="pq-q" type="search" placeholder="Nome do paciente ou n.º do trabalho" autocomplete="off" enterkeyhint="search"><button type="button" data-pqx>Cancelar</button></div><div class="pq-res" id="pq-res"></div></div>`;
+  document.body.append(ov);
+  const q=ov.querySelector("#pq-q"),res=ov.querySelector("#pq-res");
+  const draw=()=>{const t=semAc(q.value).trim().split(/\s+/).filter(Boolean);
+    const L=JOBS.filter(j=>!t.length||t.every(w=>semAc(nomeC(j)+" "+j.u+" "+j.id).includes(w))).sort((a,b)=>String(b.em).localeCompare(String(a.em)));
+    res.innerHTML=!t.length?(L.length?`<div class="pq-h">Recentes</div><div class="list">${L.slice(0,8).map(j=>jobRow(j)).join("")}</div>`:""):
+      L.length?`<div class="pq-h">${L.length} trabalho${L.length>1?"s":""}</div><div class="list">${L.slice(0,40).map(j=>jobRow(j)).join("")}</div>`:`<div class="pq-none">Nenhum trabalho para “${esc(q.value.trim())}”</div>`;};
+  const fechar=()=>{ov.remove();document.removeEventListener("keydown",kd,true)};
+  const kd=e=>{if(e.key==="Escape"){e.preventDefault();fechar()}else if(e.key==="Enter"&&document.activeElement===q){const b=res.querySelector("[data-open]");b&&b.click()}};
+  document.addEventListener("keydown",kd,true);
+  ov.addEventListener("click",e=>{if(e.target.closest("[data-pqx]")){fechar();return}if(e.target.closest("[data-open]"))setTimeout(fechar,0)});
+  q.oninput=draw;draw();setTimeout(()=>q.focus(),30);
+}
+document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();abrirPesquisa()}});
 /* para quem vai o aviso no JMC Avisos (receções e médicos) */
 function paraOp(){return [["Aveiro","Receção Aveiro"],["Faíscas","Receção Faíscas"],["Dr. Gonçalo","Dr. Gonçalo"],["Dra. Catarina","Dra. Catarina"]];}
 function paraPre(j){const own={"Dr. Gonçalo Jesus":"Dr. Gonçalo","Dra. Catarina Mar Couto":"Dra. Catarina","Dr. Gonçalo":"Dr. Gonçalo","Dra. Catarina":"Dra. Catarina"};return [...(j.cl==="Aveiro"||j.cl==="Faíscas"?[j.cl]:["Aveiro","Faíscas"]),...(own[j.por]?[own[j.por]]:[])];}
@@ -898,14 +976,14 @@ function newSheet(ov){
     (gAb?`<div class="tgrid" style="margin-top:10px">${Object.keys(TIPOS).filter(k=>TIPOS[k].g===gAb&&!TIPOS[k].off).map(k=>`<button type="button" class="tbtn" data-tp="${k}" aria-pressed="${F.tp===k}">${esc(TIPOS[k].n)}${LEAD[k]?`<small>habitual ${LEAD[k]} dias</small>`:""}</button>`).join("")}</div>`:"");
   const cfNeeded=t&&t.cf;
   const _prev=sheetPrev(ov); ov.innerHTML=`<div class="scrim" data-close></div><div class="sheet ${_prev.same?"noanim":""}" role="dialog" aria-modal="true" aria-label="Novo pedido">
-    <div class="sh-h"><button type="button" class="l" data-close>Cancelar</button><h2>${F.seg?"Continuar trabalho":"Novo pedido"}</h2><button type="button" class="r" data-act="enviar">Enviar</button></div>
+    <div class="sh-h"><button type="button" class="l" data-close>Cancelar</button><h2>${F.seg?"Continuar trabalho":lab()?"Adicionar trabalho":"Novo pedido"}</h2><button type="button" class="r" data-act="enviar">Enviar</button></div>
     <div class="sh-b">
       ${F.seg?`<div class="group"><div class="note" style="margin:0 0 8px">Seguimento de <b>${esc(F.seg)}</b> · ${esc(F.u)}. O que é preciso agora? O trabalho anterior fica fechado como "Continuado".</div><div class="chips" style="justify-content:flex-start">${["Retificação","Nova prova","Nova coroa / refazer","Outro"].map(m=>`<button type="button" class="chip" data-segm="${m}" aria-pressed="${F.segM===m}">${m}</button>`).join("")}</div></div>`:""}
       <div class="group"><div class="list">
         <div class="field"><label for="f-u">Utente</label><input id="f-u" value="${esc(F.u)}" placeholder="Nome" autocomplete="off" list="imed-list"></div>
         ${confirmaNome(F)}
         <div class="field"><label for="f-med">Médico</label><select id="f-med">${MEDICOS.map(m=>`<option ${F.med===m?"selected":""}>${m}</option>`).join("")}</select></div>
-        <div class="field"><span class="lb">Clínica</span><span class="muted" style="flex:1;text-align:right">${esc(state.clinic||"—")} · pedido por ${esc(state.user.n)}</span></div>
+        ${lab()?`<div class="field"><span class="lb">Clínica</span><span class="chips" style="flex:1;justify-content:flex-end">${["Aveiro","Faíscas"].map(c=>`<button type="button" class="chip" data-fcl="${c}" aria-pressed="${F.cl===c}">${c}</button>`).join("")}</span></div>`:`<div class="field"><span class="lb">Clínica</span><span class="muted" style="flex:1;text-align:right">${esc(state.clinic||"—")} · pedido por ${esc(state.user.n)}</span></div>`}
       </div></div>
       <div class="group"><div class="gh"><span>Tipo de trabalho</span></div><div class="list"><div class="field col">${tipos}</div></div></div>
       ${t&&(t.mats||t.sobre)?`<div class="group"><div class="gh"><span>${esc(t.n)}</span></div><div class="list">
@@ -958,6 +1036,7 @@ function enviar(){
   const F=state.form,t=TIPOS[F.tp],err=m=>{$("#f-err").textContent=m;$("#f-err").scrollIntoView({block:"center"})};
   if(F.seg&&!F.segM) return err("Escolhe o que é preciso: retificação, nova prova, nova coroa…");
   if(!F.u.trim()) return err("Falta o nome do utente.");
+  if(lab()&&!F.cl) return err("Escolhe a clínica: Aveiro ou Faíscas.");
   if(!t) return err("Escolhe o tipo de trabalho.");
   const ds=F.datas.filter(x=>x.d);
   if(!ds.length) return err("Indica pelo menos uma data de consulta.");
@@ -965,13 +1044,13 @@ function enviar(){
   const cor=F.cor==="Outro"?F.corOutro.trim():F.cor;
   if(t.cf&&!cor&&!F.fotos.length) return err("Envia a foto ou, na falta dela, a cor.");
   if(!F.fotos.length&&!F.semFotoOk){F.askFoto=true;newSheet(ov);const b=$("#semfoto");b&&b.scrollIntoView({block:"center",behavior:"smooth"});return;}
-  const j={id:"L"+Date.now().toString(36),u:F.u.trim(),cl:state.clinic||"Faíscas",tp:F.tp,mat:F.mat||null,sob:t.sobre?F.sob:null,den:F.den.join(", ")||null,cor:cor||null,med:F.med,obs:F.obs.trim()||null,
-    fot:0,fotos:[],por:state.user.n,em:nowS(),st:"novo",labSt:null,falta:null,imp:false,
+  const j={id:"L"+Date.now().toString(36),u:F.u.trim(),cl:lab()?F.cl:(state.clinic||"Faíscas"),tp:F.tp,mat:F.mat||null,sob:t.sobre?F.sob:null,den:F.den.join(", ")||null,cor:cor||null,med:F.med,obs:F.obs.trim()||null,
+    fot:0,fotos:[],por:state.user.n,em:nowS(),st:lab()?"aceite":"novo",labSt:null,falta:null,imp:false,
     dt:ds.map(x=>({d:x.d,h:x.h,f:x.f,x:x.f==="prova"&&F.tp==="prova"?F.mat:(x.f==="prova"?"Prova":tipoTxtF(F)),c:false,o:false})),hi:[],ms:[],etp:{},pedeConf:null,pedeEstado:null};
   if(F.imed){j.imed=F.imed;j.fi=F.fi;j.iq="ok"} else {j.imed=F.nmNao?null:imedMatch(j.u); j.iq=j.imed?"ok":null}
   if(F.seg){const o=byId(F.seg); j.seg=F.seg; j.obs=[`${F.segM} (seguimento de ${F.seg})`,j.obs].filter(Boolean).join(" — "); if(o){o.segPara=j.id; if(aberto(o)||o.st==="entregue") o.st="continuado"; log(o,`${F.segM}: continuado em ${j.id} por ${state.user.n}`); SRV.dirty&&SRV.dirty.add&&SRV.dirty.add(o.id);}}
   log(j,F.seg?`${F.segM} pedido(a) por ${state.user.n} (${j.cl}) · seguimento de ${F.seg}`:`Pedido enviado por ${state.user.n} (${j.cl})`);
-  JOBS.push(j); const urls=F.fotos.slice(); state.form=null; state.sheet=null; if(urls.length) enviarFotos(j,urls); toast(`Pedido enviado ao Milner · ${fmt(ds.map(x=>x.d).sort()[0])}`); render();
+  JOBS.push(j); const urls=F.fotos.slice(); state.form=null; state.sheet=null; if(urls.length) enviarFotos(j,urls); if(lab()){toast(`Trabalho adicionado · ${j.cl} · ${fmt(ds.map(x=>x.d).sort()[0])}`);avisarClinica([j.cl],"n",`O laboratório adicionou um trabalho: ${nomeC(j)} · ${tipoTxt(j)} · ${fmt(ds.map(x=>x.d).sort()[0])}`,j.id)} else toast(`Pedido enviado ao Milner · ${fmt(ds.map(x=>x.d).sort()[0])}`); render();
 }
 const tipoTxtF=F=>`${TIPOS[F.tp].n}${F.mat?" · "+F.mat:""}`;
 
@@ -1033,6 +1112,7 @@ document.addEventListener("click",ev=>{
   const nmx=T.closest("[data-nmx]"); if(nmx){ovk&&ovk();F.imed=null;F.fi=null;F.nmNao=false;newSheet($("#overlay"));return}
   const mt=T.closest("[data-mat]"); if(mt){ovk&&ovk();F.mat=mt.dataset.mat;newSheet($("#overlay"));return}
   const sb=T.closest("[data-sob]"); if(sb){ovk&&ovk();F.sob=sb.dataset.sob;newSheet($("#overlay"));return}
+  const fc=T.closest("[data-fcl]"); if(fc&&F){ovk&&ovk();F.cl=fc.dataset.fcl;newSheet($("#overlay"));return}
   const th=T.closest("[data-tooth]"); if(th){ovk&&ovk();const n=th.dataset.tooth;F.den=F.den.includes(n)?F.den.filter(x=>x!==n):[...F.den.filter(x=>!x.startsWith("Arcada")),n].sort((a,b)=>+a-+b);newSheet($("#overlay"));return}
   const ar=T.closest("[data-arch]"); if(ar){ovk&&ovk();const n=ar.dataset.arch;F.den=F.den.includes(n)?F.den.filter(x=>x!==n):[...F.den.filter(x=>x.startsWith("Arcada")),n];newSheet($("#overlay"));return}
   const cr=T.closest("[data-cor]"); if(cr){ovk&&ovk();F.cor=F.cor===cr.dataset.cor?"":cr.dataset.cor;newSheet($("#overlay"));return}
@@ -1076,6 +1156,7 @@ document.addEventListener("click",ev=>{
       case "semfoto": ev.stopPropagation(); F.semFotoOk=true; return enviar();
       case "fotoagora": ev.stopPropagation(); F.askFoto=false; newSheet($("#overlay")); $("#f-ph")?.click(); return;
       case "addd": ovk&&ovk(); F.datas.push({d:"",h:"",f:""}); return newSheet($("#overlay"));
+      case "pesquisa": abrirPesquisa(); return;
       case "ajustes": state.sheet="ajustes"; break;
       case "escrever": escreverClinica(); return;
       case "continuar": if(j){ const den=String(j.den||"").split(/\s*,\s*/).filter(Boolean);
