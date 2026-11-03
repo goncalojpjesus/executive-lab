@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Navegar o Invisível · Votação</title>
+<style>
+:root{--bg:#000;--card:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);--ink:#f5f5f7;--ink2:#a1a1a6;--gold:#c6a755;--gold2:#ecd59c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100svh;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 28px) 20px calc(env(safe-area-inset-bottom) + 24px)}
+.glow{position:fixed;inset:-30% -30% auto;height:70%;background:radial-gradient(closest-side,rgba(198,167,85,.22),transparent);pointer-events:none}
+header{position:relative;text-align:center}
+.e{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold)}
+h1{margin:14px 0 6px;font-size:30px;line-height:1.12;font-weight:700;letter-spacing:-.02em}
+.s{color:var(--ink2);font-size:16px;margin:0}
+#st{margin:22px auto 0;display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:14px;color:var(--ink2)}
+#st i{width:8px;height:8px;border-radius:50%;background:#8e8e93}
+#st.on i{background:#30d158;box-shadow:0 0 10px #30d158}
+main{position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;margin:26px 0}
+.opt{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:22px;padding:20px 22px;display:flex;align-items:center;gap:18px;text-align:left;font:inherit;cursor:pointer;transition:transform .15s,border-color .2s,background .2s;-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+.opt:active{transform:scale(.97)}
+.opt b{font-size:46px;font-weight:700;letter-spacing:-.03em;min-width:44px;color:var(--gold2)}
+.opt span{display:block;font-size:18px;font-weight:600}
+.opt small{display:block;color:var(--ink2);font-size:14px;margin-top:2px}
+.opt.sel{border-color:var(--gold);background:rgba(198,167,85,.16)}
+.opt[disabled]{cursor:default}
+.opt[disabled]:not(.sel){opacity:.35}
+.res{display:none;height:6px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden}
+.res em{display:block;height:100%;width:0;background:var(--gold);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.show .res{display:block}
+.pc{margin-left:auto;font-size:20px;font-weight:600;color:var(--ink2);display:none}
+.show .pc{display:block}
+#msg{text-align:center;color:var(--ink2);font-size:15px;min-height:22px}
+footer{text-align:center;color:#6e6e73;font-size:12px;letter-spacing:.08em}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<header>
+  <div class="e">Navegar o Invisível · Caso 04</div>
+  <h1>Quantos implantes colocaria nesta maxila?</h1>
+  <p class="s">Reabilitação fixa total da maxila. Escolha uma opção.</p>
+  <div id="st"><i></i><span>A ligar…</span></div>
+</header>
+<main id="opts">
+  <button class="opt" data-v="4" type="button"><b>4</b><div style="flex:1"><span>All-on-4</span><small>Dois retos, dois distais inclinados</small><div class="res"><em></em></div></div><div class="pc"></div></button>
+  <button class="opt" data-v="6" type="button"><b>6</b><div style="flex:1"><span>All-on-6</span><small>Mais apoio posterior</small><div class="res"><em></em></div></div><div class="pc"></div></button>
+  <button class="opt" data-v="8" type="button"><b>8</b><div style="flex:1"><span>All-on-8</span><small>Distribuição máxima da carga</small><div class="res"><em></em></div></div><div class="pc"></div></button>
+</main>
+<div id="msg"></div>
+<footer>JESUS MAR COUTO · VOTAÇÃO ANÓNIMA</footer>
+<script>
+(() => {
+const URL_ = 'https://piudosbhockofrtiieig.supabase.co/rest/v1', KEY = 'sb_publishable_POCYHRzMTQDQPXf8ESnJ_w_I6QDMctw';
+const S = (new URLSearchParams(location.search).get('s') || 'caso04').replace(/[^a-z0-9_-]/gi, '');
+const H = {apikey:KEY, 'Content-Type':'application/json'};
+const ls = {get:k => { try { return localStorage.getItem(k); } catch(e){ return null; } }, set:(k, v) => { try { localStorage.setItem(k, v); } catch(e){} }};
+let me = ls.get('jmc-votante'); if (!me){ me = (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c === 'x' ? r : (r&3|8)).toString(16); })); ls.set('jmc-votante', me); }
+let mine = +ls.get('jmc-voto-' + S) || 0, open = false, busy = false, fecha = null, skew = 0;
+const $ = q => document.querySelector(q), opts = [...document.querySelectorAll('.opt')], st = $('#st'), msg = $('#msg');
+function paint(rows){
+  opts.forEach(b => { b.classList.toggle('sel', +b.dataset.v === mine); b.disabled = !open || !!mine || busy; });
+  const closed = rows && !open && rows.some(r => r.n > 0) && fecha;
+  document.body.classList.toggle('show', !!closed);
+  if (closed){ const tot = rows.reduce((a, r) => a + +r.n, 0) || 1;
+    rows.forEach(r => { const b = opts.find(x => +x.dataset.v === r.escolha); if (!b) return; const p = Math.round(100 * r.n / tot); b.querySelector('.res em').style.width = p + '%'; b.querySelector('.pc').textContent = p + '%'; }); }
+  if (mine) msg.textContent = open ? `Obrigado. Votou em ${mine} implantes.` : `Votou em ${mine} implantes. Veja o resultado no ecrã.`;
+  else msg.textContent = open ? 'Toque numa opção para votar.' : (fecha ? 'A votação terminou.' : 'Aguarde: a votação abre durante a palestra.');
+}
+function tick(){
+  if (open && fecha){ const s = Math.max(0, Math.round((fecha - (Date.now() + skew)) / 1000)); st.querySelector('span').textContent = `Votação aberta · ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; if (s <= 0){ open = false; poll(); } }
+}
+let last = null;
+async function poll(){
+  try {
+    const r = await fetch(URL_ + '/rpc/congresso_contagem', {method:'POST', headers:H, body:JSON.stringify({p_sessao:S}), cache:'no-store'});
+    if (!r.ok) throw 0; const rows = await r.json(); last = rows;
+    open = !!(rows[0] && rows[0].aberta); fecha = rows[0] && rows[0].fecha_em ? Date.parse(rows[0].fecha_em) : null;
+    if (rows[0] && rows[0].agora) skew = Date.parse(rows[0].agora) - Date.now();
+    st.classList.toggle('on', open); st.querySelector('span').textContent = open ? 'Votação aberta' : (fecha ? 'Votação fechada' : 'Ainda não abriu');
+    tick(); paint(rows);
+  } catch(e){ st.classList.remove('on'); st.querySelector('span').textContent = 'Sem ligação · a tentar de novo'; }
+}
+opts.forEach(b => b.addEventListener('click', async () => {
+  if (!open || mine || busy) return; busy = true; const v = +b.dataset.v; paint(last); msg.textContent = 'A enviar…';
+  try {
+    const r = await fetch(URL_ + '/congresso_votos', {method:'POST', headers:{...H, Prefer:'return=minimal'}, body:JSON.stringify({sessao:S, escolha:v, votante:me})});
+    if (r.ok || r.status === 409){ mine = v; ls.set('jmc-voto-' + S, String(v)); if (navigator.vibrate) navigator.vibrate(18); }
+    else { msg.textContent = 'A votação já fechou.'; open = false; }
+  } catch(e){ msg.textContent = 'Sem ligação. Tente outra vez.'; }
+  busy = false; paint(last);
+}));
+poll(); setInterval(poll, 2500); setInterval(tick, 500);
+})();
+</script>
+</body>
+</html>
