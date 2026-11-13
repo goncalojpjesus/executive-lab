@@ -318,6 +318,7 @@ button.rowi:active{background:var(--fill)}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s cubic-bezier(.2,.8,.2,1)}@keyframes up{from{opacity:0;translate:0 24px}}}
 .biobtn{margin:6px auto 0;display:inline-flex;gap:10px;align-items:center;padding:13px 22px;border-radius:999px;background:linear-gradient(135deg,#E3C98A,#B08D45);color:#1b1813;font-weight:600;font-size:.95rem;touch-action:manipulation}
 .biobtn svg{width:22px;height:22px}
+#overlay:has(.sheet)~.biooffer,body:has(#overlay .sheet) .biooffer{display:none!important}
 .biooffer{position:fixed;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;justify-content:center}
 .bio-c{background:var(--card);color:var(--fg);border-radius:18px;padding:16px 18px;max-width:420px;box-shadow:0 10px 40px rgba(0,0,0,.25);text-align:center}
 .bio-c p{margin:6px 0 12px;color:var(--muted);font-size:.88rem}.bio-c .chips{justify-content:center}
@@ -1007,7 +1008,7 @@ function newSheet(ov){
     </div></div>`;
   const keep=()=>{F.u=$("#f-u").value;F.med=$("#f-med").value;F.obs=$("#f-obs").value;if($("#f-coro"))F.corOutro=$("#f-coro").value};
   ["#f-u","#f-obs"].forEach(s=>$(s).addEventListener("input",keep));
-  $("#f-u").addEventListener("change",()=>{keep();F.imed=null;F.fi=null;F.nmNao=false;SUGIM.lista=[];newSheet(ov);pedirSug(F.u,()=>{if(state.sheet==="novo"&&!F.imed)newSheet(ov)});});
+  $("#f-u").addEventListener("change",()=>{keep();F.imed=null;F.fi=null;F.nmNao=false;SUGIM.lista=[];setTimeout(()=>{const a=document.activeElement;if(state.sheet==="novo"&&!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.id!=="f-u"))newSheet(ov)},300);pedirSug(F.u,()=>{if(state.sheet==="novo"&&!F.imed)newSheet(ov)});});
   ov._sug=()=>sugestoes(F.u,state.clinic);
   if(IMED.length&&!document.getElementById("imed-list")){const dl=document.createElement("datalist");dl.id="imed-list";dl.innerHTML=IMED.slice(0,6000).map(p=>`<option value="${esc(p.n)}">`).join("");document.body.append(dl)} $("#f-med").onchange=keep; if($("#f-coro"))$("#f-coro").oninput=keep;
   ov.querySelectorAll("[data-di]").forEach(inp=>inp.onchange=()=>{keep();F.datas[+inp.dataset.di][inp.dataset.k]=inp.value;newSheet(ov)});
@@ -1026,14 +1027,14 @@ function confirmaNome(F){
 function dateWarn(F){
   const first=F.datas.filter(x=>x.d).map(x=>x.d).sort()[0]; if(!first||!F.tp) return "";
   const d=diff(TODAY,first),h=LEAD[F.tp]||7;
-  if(d<=1) return ` <span style="color:var(--red)">Muito em cima: ${fmt(first)}. O Milner recebe o pedido como urgente.</span>`;
-  if(d<Math.min(h,7)) return ` <span style="color:var(--orange)">Mais curto do que o habitual (${d} dias).</span>`;
+  if(d<=1) return ` <span style="color:var(--red)">Prazo muito curto: ${fmt(first)}. O pedido pode ser enviado na mesma; o Milner recebe-o como urgente.</span>`;
+  if(d<Math.min(h,7)) return ` <span style="color:var(--orange)">Prazo mais curto do que o habitual (${d} dias). Pode enviar na mesma.</span>`;
   return "";
 }
 function shrink(file){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.82))};im.onerror=()=>res(r.result);im.src=r.result};r.readAsDataURL(file)})}
 function enviar(){
   const ov=$("#overlay"); ov._keep&&ov._keep();
-  const F=state.form,t=TIPOS[F.tp],err=m=>{$("#f-err").textContent=m;$("#f-err").scrollIntoView({block:"center"})};
+  const F=state.form,t=TIPOS[F.tp],err=m=>{$("#f-err").textContent=m;$("#f-err").scrollIntoView({block:"center"});toast(m)};
   if(F.seg&&!F.segM) return err("Escolhe o que é preciso: retificação, nova prova, nova coroa…");
   if(!F.u.trim()) return err("Falta o nome do utente.");
   if(lab()&&!F.cl) return err("Escolhe a clínica: Aveiro ou Faíscas.");
